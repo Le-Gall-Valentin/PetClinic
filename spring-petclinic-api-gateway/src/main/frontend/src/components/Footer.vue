@@ -1,0 +1,15 @@
+<template>
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center">
+        <img src="/images/spring-pivotal-logo.png" alt="Sponsored by Pivotal"/>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+</script>
+
+<style scoped>
+</style>

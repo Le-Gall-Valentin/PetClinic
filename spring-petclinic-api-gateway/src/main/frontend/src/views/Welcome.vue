@@ -1,0 +1,14 @@
+<template>
+  <h2>Welcome</h2>
+  <div class="row">
+    <div class="col-md-12">
+      <img class="img-responsive" src="/images/pets.png" alt="pets"/>
+    </div>
+  </div>
+</template>
+
+<script setup>
+</script>
+
+<style scoped>
+</style>

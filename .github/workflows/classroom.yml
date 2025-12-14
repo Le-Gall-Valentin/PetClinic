@@ -1,0 +1,80 @@
+name: Autograding Tests
+'on':
+  - push
+  - repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: write
+  pull-requests: write
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests with coverage
+        run: mvn clean test
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        id: test-results
+        if: always()
+        with:
+          files: |
+            **/target/surefire-reports/**/*.xml
+          check_run: false
+          comment_title: "Test Results"
+          json_file: test-results.json
+          json_test_case_results: true
+          json_suite_details: true
+          report_individual_runs: true
+          deduplicate_classes_by_file_name: false
+
+      - name: Generate JaCoCo Badge
+        id: jacoco
+        if: always()
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-csv-file: '**/target/site/jacoco/jacoco.csv'
+          generate-branches-badge: true
+          generate-summary: true
+
+      - name: Calculate coverage points
+        id: coverage-points
+        if: always()
+        run: |
+          COVERAGE=${{ steps.jacoco.outputs.coverage }}
+          COVERAGE_POINTS=$(awk "BEGIN {printf \"%.0f\", $COVERAGE * 100}")
+          echo "coverage_points=$COVERAGE_POINTS" >> $GITHUB_OUTPUT
+          echo "Coverage: ${COVERAGE_POINTS}% = ${COVERAGE_POINTS}/100 points"
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: '**/target/site/jacoco/'
+
+      - name: Notify GitHub Classroom of results
+        if: always()
+        run: |
+          PASS=${{ fromJSON(steps.test-results.outputs.json).stats.tests_succ }}
+          TOTAL=${{ fromJSON(steps.test-results.outputs.json).stats.tests }}
+          COVERAGE=${{ steps.coverage-points.outputs.coverage_points }}
+
+          echo "::notice title=Autograding complete::Points ${COVERAGE}/100"
+          echo "::notice title=Autograding report::{\"totalPoints\":${COVERAGE},\"maxPoints\":100}"
+
+      - name: Fail if tests failed
+        if: fromJSON(steps.test-results.outputs.json).conclusion != 'success'
+        run: exit 1
