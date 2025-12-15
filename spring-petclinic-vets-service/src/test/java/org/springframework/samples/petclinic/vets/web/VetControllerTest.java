@@ -17,10 +17,12 @@ package org.springframework.samples.petclinic.vets.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.vets.controller.VetController;
 import org.springframework.samples.petclinic.vets.exception.ResourceNotFoundException;
@@ -28,7 +30,6 @@ import org.springframework.samples.petclinic.vets.model.DTO.VetDTO;
 import org.springframework.samples.petclinic.vets.model.DTO.VetPostDTO;
 import org.springframework.samples.petclinic.vets.service.VetService;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -43,9 +44,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Maciej Szarlinski
  */
-@ExtendWith(SpringExtension.class)
 @WebMvcTest(VetController.class)
 @ActiveProfiles("test")
+@Import(VetControllerTest.MockConfig.class)
 class VetControllerTest {
 
     @Autowired
@@ -54,7 +55,7 @@ class VetControllerTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @MockBean
+    @Autowired
     VetService vetService;
 
     @Test
@@ -135,12 +136,10 @@ class VetControllerTest {
             .andExpect(status().isBadRequest());
     }
 
-
     @Test
     void shouldRejectPostWhenJsonIsInvalid() throws Exception {
         mvc.perform(post("/vets")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{not-json}"))
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
 
@@ -151,6 +150,15 @@ class VetControllerTest {
 
         mvc.perform(get("/vets/999").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
+    }
+
+    @TestConfiguration
+    static class MockConfig {
+
+        @Bean
+        VetService vetService() {
+            return Mockito.mock(VetService.class);
+        }
     }
 
 }
