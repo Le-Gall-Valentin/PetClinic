@@ -68,11 +68,12 @@ const router = useRouter()
 const pet = ref({
   name: '',
   birthDate: '',
-  owner: ''
+  owner: '',
+  id: 0
 })
 
 const types = ref([])
-const petTypeId = ref('1')
+const petTypeId = ref(null)
 const errors = ref({})
 
 const ownerId = route.params.ownerId
@@ -82,6 +83,10 @@ onMounted(async () => {
   try {
     const typesResponse = await api.getPetTypes()
     types.value = typesResponse.data
+
+    if (!petId && types.value.length && petTypeId.value == null) {
+      petTypeId.value = types.value[0].id
+    }
 
     if (petId) {
       // Edit existing pet
@@ -93,7 +98,8 @@ onMounted(async () => {
           birthDate: existingPet.birthDate ? existingPet.birthDate.split('T')[0] : '',
           owner: `${petResponse.data.firstName} ${petResponse.data.lastName}`
         }
-        petTypeId.value = existingPet.type.id
+                petTypeId.value = existingPet.type?.id ??
+          (types.value.find(t => t.name === existingPet.type?.name)?.id ?? null)
       }
     } else {
       // New pet
@@ -112,7 +118,8 @@ const submit = async () => {
     id: pet.value.id || 0,
     name: pet.value.name,
     birthDate: pet.value.birthDate,
-    typeId: petTypeId.value
+    pets: [],
+    typeId: petTypeId.value == null ? null : Number(petTypeId.value)
   }
 
   try {
@@ -121,7 +128,7 @@ const submit = async () => {
     } else {
       await api.createPet(ownerId, data)
     }
-    router.push(`/owners/${ownerId}`)
+    await router.push(`/owners/${ownerId}`)
   } catch (error) {
     console.error('Failed to save pet:', error)
   }
