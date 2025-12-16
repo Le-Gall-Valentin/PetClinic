@@ -21,10 +21,10 @@ public class VetServiceImpl implements VetService {
     private final SpecialtyService specialtyService;
     private final VetEntityMapper vetEntityMapper;
 
-    public VetServiceImpl(VetRepository vetRepository, VetEntityMapper vetEntityMapper, SpecialtyService specialtyService, VetEntityMapper vetEntityMapper1) {
+    public VetServiceImpl(VetRepository vetRepository, VetEntityMapper vetEntityMapper, SpecialtyService specialtyService) {
         this.vetRepository = vetRepository;
         this.specialtyService = specialtyService;
-        this.vetEntityMapper = vetEntityMapper1;
+        this.vetEntityMapper = vetEntityMapper;
     }
 
 
@@ -38,7 +38,7 @@ public class VetServiceImpl implements VetService {
     @Transactional
     public Vet addVet(VetPostDTO vetPostDTO) {
         final Vet vetModel = vetEntityMapper.map(new Vet(), vetPostDTO);
-        log.info("Adding vet {}", vetModel.toString());
+        log.info("Adding vet {}", vetModel);
         vetPostDTO.specialties().forEach(specialtyId -> vetModel.addSpecialty(specialtyService.getSpecialtyById(specialtyId)));
 
         return vetRepository.save(vetModel);

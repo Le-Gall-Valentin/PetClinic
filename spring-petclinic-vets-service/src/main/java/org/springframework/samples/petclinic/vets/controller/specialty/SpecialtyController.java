@@ -15,6 +15,7 @@
  */
 package org.springframework.samples.petclinic.vets.controller.specialty;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.vets.model.specialty.DTO.SpecialtyDTO;
 import org.springframework.samples.petclinic.vets.model.specialty.SpecialtyMapper;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @RequestMapping("/specialties")
 @RestController
+@Validated
 public class SpecialtyController {
     private final SpecialtyService specialtyService;
     private final SpecialtyMapper specialtyMapper;

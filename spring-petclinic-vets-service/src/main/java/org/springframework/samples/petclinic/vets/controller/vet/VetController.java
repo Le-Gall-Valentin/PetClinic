@@ -17,6 +17,7 @@ package org.springframework.samples.petclinic.vets.controller.vet;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.vets.model.vet.DTO.VetDTO;
@@ -36,6 +37,7 @@ import java.util.List;
  */
 @RequestMapping("/vets")
 @RestController
+@Validated
 public class VetController {
     private final VetService vetService;
     private final VetEntityMapper vetEntityMapper;
