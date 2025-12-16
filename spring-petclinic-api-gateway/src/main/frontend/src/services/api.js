@@ -63,6 +63,9 @@ export default {
     updateVet(vetId, vet) {
         return api.put(`/vet/vets/${vetId}`, vet)
     },
+    getSpecialties() {
+        return api.get('/vet/specialties')
+    },
 
     // GenAI Chat
     sendChatMessage(message) {

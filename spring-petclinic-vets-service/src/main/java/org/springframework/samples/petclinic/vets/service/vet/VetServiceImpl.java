@@ -50,6 +50,11 @@ public class VetServiceImpl implements VetService {
         final Vet vetModel = vetRepository.findById(vetId).orElseThrow(() -> new ResourceNotFoundException("Vet " + vetId + " not found"));
 
         vetEntityMapper.map(vetModel, vetPostDTO);
+        final java.util.Set<org.springframework.samples.petclinic.vets.model.specialty.Specialty> newSpecialties = new java.util.HashSet<>();
+        if (vetPostDTO.specialties() != null) {
+            vetPostDTO.specialties().forEach(specialtyId -> newSpecialties.add(specialtyService.getSpecialtyById(specialtyId)));
+        }
+        vetModel.setSpecialties(newSpecialties);
         log.info("Saving vet {}", vetModel);
         vetRepository.save(vetModel);
     }

@@ -17,9 +17,6 @@
         <td>
           <router-link :to="`/vets/${vet.id}/edit`" class="btn btn-primary">Edit Veterinarian</router-link>
         </td>
-        <td>
-          <router-link :to="`/vets/${vet.id}/speciality/new`" class="btn btn-primary">Add Speciality</router-link>
-        </td>
       </tr>
     </table>
   </div>

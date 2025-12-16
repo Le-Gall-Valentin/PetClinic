@@ -77,6 +77,10 @@ public class Vet {
         getSpecialtiesInternal().add(specialty);
     }
 
+    public void setSpecialties(java.util.Set<Specialty> specialties) {
+        this.specialties = specialties;
+    }
+
     public Integer getId() {
         return this.id;
     }
