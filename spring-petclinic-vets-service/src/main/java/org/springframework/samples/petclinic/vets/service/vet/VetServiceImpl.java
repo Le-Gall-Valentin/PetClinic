@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class VetServiceImpl implements VetService{
+public class VetServiceImpl implements VetService {
     private static final Logger log = LoggerFactory.getLogger(VetServiceImpl.class);
 
     private final VetRepository vetRepository;
@@ -36,7 +36,7 @@ public class VetServiceImpl implements VetService{
     @Transactional
     public VetDTO addVet(VetPostDTO vetPostDTO) {
         final Vet vetModel = vetEntityMapper.map(new Vet(), vetPostDTO);
-        log.info("Adding vet {}", vetModel);
+        log.info("Adding vet {}", vetModel.toString());
         return vetEntityMapper.map(vetRepository.save(vetModel));
     }
 

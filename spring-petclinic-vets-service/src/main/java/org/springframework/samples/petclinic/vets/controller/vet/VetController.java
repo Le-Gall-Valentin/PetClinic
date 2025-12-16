@@ -15,17 +15,16 @@
  */
 package org.springframework.samples.petclinic.vets.controller;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.samples.petclinic.vets.model.DTO.VetDTO;
-import org.springframework.samples.petclinic.vets.model.DTO.VetPostDTO;
-import org.springframework.samples.petclinic.vets.service.VetService;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetDTO;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
+import org.springframework.samples.petclinic.vets.service.vet.VetService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Juergen Hoeller
@@ -45,7 +44,6 @@ public class VetController {
 
 
     @GetMapping
-    @Cacheable("vets")
     public ResponseEntity<List<VetDTO>> showResourcesVetList() {
         return ResponseEntity.ok(vetService.getAllVets());
     }
