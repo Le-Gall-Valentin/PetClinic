@@ -1,6 +1,6 @@
-package org.springframework.samples.petclinic.vets.model.DTO;
+package org.springframework.samples.petclinic.vets.model.vet.DTO;
 
-import org.springframework.samples.petclinic.vets.model.Specialty;
+import org.springframework.samples.petclinic.vets.model.specialty.Specialty;
 
 import java.util.List;
 

@@ -24,11 +24,11 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.samples.petclinic.vets.controller.VetController;
+import org.springframework.samples.petclinic.vets.controller.vet.VetController;
 import org.springframework.samples.petclinic.vets.exception.ResourceNotFoundException;
-import org.springframework.samples.petclinic.vets.model.DTO.VetDTO;
-import org.springframework.samples.petclinic.vets.model.DTO.VetPostDTO;
-import org.springframework.samples.petclinic.vets.service.VetService;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetDTO;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
+import org.springframework.samples.petclinic.vets.service.vet.VetService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -60,7 +60,7 @@ class VetControllerTest {
 
     @Test
     void shouldGetAListOfVets() throws Exception {
-        VetDTO vet = new VetDTO(1, "Jean", "Marc");
+        VetDTO vet = new VetDTO(1, "Jean", "Marc", List.of());
         given(vetService.getAllVets()).willReturn(List.of(vet));
 
         mvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON))
@@ -78,7 +78,7 @@ class VetControllerTest {
 
     @Test
     void shouldGetAVetWithId() throws Exception {
-        VetDTO vet = new VetDTO(1, "Jean", "Marc");
+        VetDTO vet = new VetDTO(1, "Jean", "Marc", List.of());
         given(vetService.getVetById(1)).willReturn(vet);
 
         mvc.perform(get("/vets/1").accept(MediaType.APPLICATION_JSON))
@@ -89,7 +89,7 @@ class VetControllerTest {
 
     @Test
     void shouldPostAVet() throws Exception {
-        VetDTO vet = new VetDTO(1, "Jean", "Marc");
+        VetDTO vet = new VetDTO(1, "Jean", "Marc", List.of());
         VetPostDTO body = new VetPostDTO("Jean", "Marc");
         given(vetService.addVet(any(VetPostDTO.class))).willReturn(vet);
 

@@ -6,20 +6,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.samples.petclinic.vets.exception.ResourceNotFoundException;
-import org.springframework.samples.petclinic.vets.model.DTO.VetDTO;
-import org.springframework.samples.petclinic.vets.model.DTO.VetPostDTO;
-import org.springframework.samples.petclinic.vets.model.Vet;
-import org.springframework.samples.petclinic.vets.model.VetRepository;
-import org.springframework.samples.petclinic.vets.model.mapper.VetEntityMapper;
-import org.springframework.samples.petclinic.vets.service.VetServiceImpl;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetDTO;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
+import org.springframework.samples.petclinic.vets.model.vet.Vet;
+import org.springframework.samples.petclinic.vets.model.vet.VetEntityMapper;
+import org.springframework.samples.petclinic.vets.repository.vet.VetRepository;
+import org.springframework.samples.petclinic.vets.service.vet.VetServiceImpl;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class VetServiceImplTest {
@@ -37,8 +39,8 @@ class VetServiceImplTest {
     void getAllVets_shouldReturnMappedDtos() {
         Vet v1 = new Vet();
         Vet v2 = new Vet();
-        VetDTO dto1 = new VetDTO(1, "Jean", "Marc");
-        VetDTO dto2 = new VetDTO(2, "Alice", "Durand");
+        VetDTO dto1 = new VetDTO(1, "Jean", "Marc", List.of());
+        VetDTO dto2 = new VetDTO(2, "Alice", "Durand", List.of());
 
         given(vetRepository.findAll()).willReturn(List.of(v1, v2));
         given(vetEntityMapper.map(v1)).willReturn(dto1);
@@ -60,7 +62,7 @@ class VetServiceImplTest {
 
         Vet mappedEntity = new Vet();
         Vet savedEntity = new Vet();
-        VetDTO savedDto = new VetDTO(1, "Jean", "Marc");
+        VetDTO savedDto = new VetDTO(1, "Jean", "Marc", List.of());
 
         // map(new Vet(), input) retourne une entité (celle qui sera save)
         given(vetEntityMapper.map(any(Vet.class), eq(input))).willReturn(mappedEntity);
@@ -121,7 +123,7 @@ class VetServiceImplTest {
     @Test
     void getVetById_shouldReturnMappedDto() {
         Vet entity = new Vet();
-        VetDTO dto = new VetDTO(1, "Jean", "Marc");
+        VetDTO dto = new VetDTO(1, "Jean", "Marc", List.of());
 
         given(vetRepository.findById(1)).willReturn(Optional.of(entity));
         given(vetEntityMapper.map(entity)).willReturn(dto);

@@ -1,8 +1,7 @@
-package org.springframework.samples.petclinic.vets.model.vet.mapper;
+package org.springframework.samples.petclinic.vets.model.vet;
 
 import org.springframework.samples.petclinic.vets.model.vet.DTO.VetDTO;
 import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
-import org.springframework.samples.petclinic.vets.model.vet.Vet;
 import org.springframework.stereotype.Component;
 
 @Component

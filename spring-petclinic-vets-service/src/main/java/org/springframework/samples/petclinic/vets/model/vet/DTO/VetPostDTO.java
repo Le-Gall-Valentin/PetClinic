@@ -1,4 +1,4 @@
-package org.springframework.samples.petclinic.vets.model.DTO;
+package org.springframework.samples.petclinic.vets.model.vet.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 

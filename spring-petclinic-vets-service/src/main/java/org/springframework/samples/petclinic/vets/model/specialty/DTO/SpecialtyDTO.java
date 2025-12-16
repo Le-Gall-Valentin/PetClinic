@@ -1,4 +1,7 @@
 package org.springframework.samples.petclinic.vets.model.specialty.DTO;
 
-public class SpecialtyDTO {
+public record SpecialtyDTO(
+    Integer id,
+    String name
+) {
 }

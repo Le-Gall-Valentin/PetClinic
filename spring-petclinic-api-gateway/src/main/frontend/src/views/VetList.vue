@@ -4,28 +4,32 @@
 
     <table class="table table-striped">
       <thead>
-        <tr>
-          <th>Name</th>
-          <th>Specialties</th>
-        </tr>
+      <tr>
+        <th>Name</th>
+        <th>Specialties</th>
+      </tr>
       </thead>
       <tbody>
-        <tr v-for="vet in vets" :key="vet.id">
-          <td>{{ vet.firstName }} {{ vet.lastName }}</td>
-          <td>
+      <tr v-for="vet in vets" :key="vet.id">
+        <td>
+          <router-link :to="`/vets/${vet.id}`">
+            {{ vet.firstName }} {{ vet.lastName }}
+          </router-link>
+        </td>
+        <td>
             <span v-for="(specialty, index) in vet.specialties" :key="specialty.id">
               {{ specialty.name }}<span v-if="index < vet.specialties.length - 1">, </span>
             </span>
-            <span v-if="!vet.specialties || vet.specialties.length === 0">none</span>
-          </td>
-        </tr>
+          <span v-if="!vet.specialties || vet.specialties.length === 0">none</span>
+        </td>
+      </tr>
       </tbody>
     </table>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {onMounted, ref} from 'vue'
 import api from '../services/api'
 
 const vets = ref([])

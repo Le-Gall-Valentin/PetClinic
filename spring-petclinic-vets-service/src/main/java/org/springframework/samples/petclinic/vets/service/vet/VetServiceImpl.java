@@ -1,13 +1,13 @@
-package org.springframework.samples.petclinic.vets.service;
+package org.springframework.samples.petclinic.vets.service.vet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.samples.petclinic.vets.exception.ResourceNotFoundException;
-import org.springframework.samples.petclinic.vets.model.DTO.VetDTO;
-import org.springframework.samples.petclinic.vets.model.DTO.VetPostDTO;
-import org.springframework.samples.petclinic.vets.model.Vet;
-import org.springframework.samples.petclinic.vets.model.VetRepository;
-import org.springframework.samples.petclinic.vets.model.mapper.VetEntityMapper;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
+import org.springframework.samples.petclinic.vets.model.vet.Vet;
+import org.springframework.samples.petclinic.vets.model.vet.VetEntityMapper;
+import org.springframework.samples.petclinic.vets.repository.vet.VetRepository;
+import org.springframework.samples.petclinic.vets.service.specialty.SpecialtyService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,26 +18,30 @@ public class VetServiceImpl implements VetService {
     private static final Logger log = LoggerFactory.getLogger(VetServiceImpl.class);
 
     private final VetRepository vetRepository;
+    private final SpecialtyService specialtyService;
     private final VetEntityMapper vetEntityMapper;
 
-    public VetServiceImpl(VetRepository vetRepository, VetEntityMapper vetEntityMapper) {
+    public VetServiceImpl(VetRepository vetRepository, VetEntityMapper vetEntityMapper, SpecialtyService specialtyService, VetEntityMapper vetEntityMapper1) {
         this.vetRepository = vetRepository;
-        this.vetEntityMapper = vetEntityMapper;
+        this.specialtyService = specialtyService;
+        this.vetEntityMapper = vetEntityMapper1;
     }
 
 
     @Override
     @Transactional(readOnly = true)
-    public List<VetDTO> getAllVets() {
-        return vetRepository.findAll().stream().map(vetEntityMapper::map).toList();
+    public List<Vet> getAllVets() {
+        return vetRepository.findAll();
     }
 
     @Override
     @Transactional
-    public VetDTO addVet(VetPostDTO vetPostDTO) {
+    public Vet addVet(VetPostDTO vetPostDTO) {
         final Vet vetModel = vetEntityMapper.map(new Vet(), vetPostDTO);
         log.info("Adding vet {}", vetModel.toString());
-        return vetEntityMapper.map(vetRepository.save(vetModel));
+        vetPostDTO.specialties().forEach(specialtyId -> vetModel.addSpecialty(specialtyService.getSpecialtyById(specialtyId)));
+
+        return vetRepository.save(vetModel);
     }
 
     @Override
@@ -52,7 +56,7 @@ public class VetServiceImpl implements VetService {
 
     @Override
     @Transactional(readOnly = true)
-    public VetDTO getVetById(int vetId) {
-        return vetEntityMapper.map(vetRepository.findById(vetId).orElseThrow(() -> new ResourceNotFoundException("Vet " + vetId + " not found")));
+    public Vet getVetById(int vetId) {
+        return vetRepository.findById(vetId).orElseThrow(() -> new ResourceNotFoundException("Vet " + vetId + " not found"));
     }
 }
