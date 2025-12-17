@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.vets.model;
+package org.springframework.samples.petclinic.vets.model.vet;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.xml.bind.annotation.XmlElement;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
+import org.springframework.samples.petclinic.vets.model.specialty.Specialty;
 
 import java.util.*;
 
@@ -76,27 +77,41 @@ public class Vet {
         getSpecialtiesInternal().add(specialty);
     }
 
+    public void setSpecialties(java.util.Set<Specialty> specialties) {
+        this.specialties = specialties;
+    }
+
     public Integer getId() {
         return this.id;
-    }
-
-    public String getFirstName() {
-        return this.firstName;
-    }
-
-    public String getLastName() {
-        return this.lastName;
     }
 
     public void setId(Integer id) {
         this.id = id;
     }
 
+    public String getFirstName() {
+        return this.firstName;
+    }
+
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    public String getLastName() {
+        return this.lastName;
+    }
+
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    @Override
+    public String toString() {
+        return "Vet{" +
+            "id=" + id +
+            ", firstName='" + firstName + '\'' +
+            ", lastName='" + lastName + '\'' +
+            ", specialties=" + specialties +
+            '}';
     }
 }

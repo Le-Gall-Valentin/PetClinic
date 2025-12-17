@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.vets.controller;
-
-import java.util.List;
+package org.springframework.samples.petclinic.vets.controller.vet;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.samples.petclinic.vets.model.DTO.VetDTO;
-import org.springframework.samples.petclinic.vets.model.DTO.VetPostDTO;
-import org.springframework.samples.petclinic.vets.service.VetService;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetDTO;
+import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
+import org.springframework.samples.petclinic.vets.model.vet.VetEntityMapper;
+import org.springframework.samples.petclinic.vets.service.vet.VetService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Juergen Hoeller
@@ -36,23 +37,25 @@ import org.springframework.web.bind.annotation.*;
  */
 @RequestMapping("/vets")
 @RestController
+@Validated
 public class VetController {
     private final VetService vetService;
+    private final VetEntityMapper vetEntityMapper;
 
-    VetController(VetService vetService) {
+    VetController(VetService vetService, VetEntityMapper vetEntityMapper) {
         this.vetService = vetService;
+        this.vetEntityMapper = vetEntityMapper;
     }
 
 
     @GetMapping
-    @Cacheable("vets")
     public ResponseEntity<List<VetDTO>> showResourcesVetList() {
-        return ResponseEntity.ok(vetService.getAllVets());
+        return ResponseEntity.ok(vetService.getAllVets().stream().map(vetEntityMapper::map).toList());
     }
 
     @PostMapping
     public ResponseEntity<VetDTO> addNewVet(@RequestBody @Valid VetPostDTO vetPostDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(vetService.addVet(vetPostDTO));
+        return ResponseEntity.status(HttpStatus.CREATED).body(vetEntityMapper.map(vetService.addVet(vetPostDTO)));
     }
 
     @PutMapping("/{vetId}")
@@ -63,6 +66,6 @@ public class VetController {
 
     @GetMapping(value = "/{vetId}")
     public ResponseEntity<VetDTO> findVet(@PathVariable("vetId") @Min(1) int vetId) {
-        return ResponseEntity.ok(vetService.getVetById(vetId));
+        return ResponseEntity.ok(vetEntityMapper.map(vetService.getVetById(vetId)));
     }
 }

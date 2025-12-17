@@ -1,5 +1,5 @@
-import { createApp } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import {createApp} from 'vue'
+import {createRouter, createWebHashHistory} from 'vue-router'
 import App from './App.vue'
 
 // Import CSS
@@ -14,24 +14,29 @@ import OwnerForm from './views/OwnerForm.vue'
 import PetForm from './views/PetForm.vue'
 import Visits from './views/Visits.vue'
 import VetList from './views/VetList.vue'
+import VetForm from "./views/VetForm.vue";
+import VetDetails from "./views/VetDetails.vue";
 
 // Configure routes
 const routes = [
-  { path: '/', redirect: '/welcome' },
-  { path: '/welcome', name: 'welcome', component: Welcome },
-  { path: '/owners', name: 'owners', component: OwnersList },
-  { path: '/owners/new', name: 'ownerNew', component: OwnerForm },
-  { path: '/owners/:ownerId', name: 'ownerDetails', component: OwnerDetails },
-  { path: '/owners/:ownerId/edit', name: 'ownerEdit', component: OwnerForm },
-  { path: '/owners/:ownerId/pets/new', name: 'petNew', component: PetForm },
-  { path: '/owners/:ownerId/pets/:petId/edit', name: 'petEdit', component: PetForm },
-  { path: '/owners/:ownerId/pets/:petId/visits/new', name: 'visitNew', component: Visits },
-  { path: '/vets', name: 'vets', component: VetList }
+    {path: '/', redirect: '/welcome'},
+    {path: '/welcome', name: 'welcome', component: Welcome},
+    {path: '/owners', name: 'owners', component: OwnersList},
+    {path: '/owners/new', name: 'ownerNew', component: OwnerForm},
+    {path: '/owners/:ownerId', name: 'ownerDetails', component: OwnerDetails},
+    {path: '/owners/:ownerId/edit', name: 'ownerEdit', component: OwnerForm},
+    {path: '/owners/:ownerId/pets/new', name: 'petNew', component: PetForm},
+    {path: '/owners/:ownerId/pets/:petId/edit', name: 'petEdit', component: PetForm},
+    {path: '/owners/:ownerId/pets/:petId/visits/new', name: 'visitNew', component: Visits},
+    {path: '/vets', name: 'vets', component: VetList},
+    {path: '/vets/new', name: 'vetNew', component: VetForm},
+    {path: '/vets/:vetId/edit', name: 'vetEdit', component: VetForm},
+    {path: '/vets/:vetId', name: 'vetDetails', component: VetDetails},
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
-  routes
+    history: createWebHashHistory(),
+    routes
 })
 
 const app = createApp(App)

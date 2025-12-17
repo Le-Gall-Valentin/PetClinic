@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.vets.model;
+package org.springframework.samples.petclinic.vets.model.specialty;
 
 import jakarta.persistence.*;
+import org.springframework.samples.petclinic.vets.model.vet.Vet;
 
 /**
  * Models a {@link Vet Vet's} specialty (for example, dentistry).
@@ -44,5 +45,9 @@ public class Specialty {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 }

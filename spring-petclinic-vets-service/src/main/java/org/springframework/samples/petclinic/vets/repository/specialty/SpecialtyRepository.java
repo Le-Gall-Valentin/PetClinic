@@ -13,19 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.vets.model;
+package org.springframework.samples.petclinic.vets.repository.specialty;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.samples.petclinic.vets.model.specialty.Specialty;
 
-/**
- * Repository class for <code>Vet</code> domain objects All method names are compliant with Spring Data naming
- * conventions so this interface can easily be extended for Spring Data See here: http://static.springsource.org/spring-data/jpa/docs/current/reference/html/jpa.repositories.html#jpa.query-methods.query-creation
- *
- * @author Ken Krebs
- * @author Juergen Hoeller
- * @author Sam Brannen
- * @author Michael Isvy
- * @author Maciej Szarlinski
- */
-public interface VetRepository extends JpaRepository<Vet, Integer> {
+public interface SpecialtyRepository extends JpaRepository<Specialty, Integer> {
 }
