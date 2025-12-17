@@ -35,4 +35,10 @@ public interface VisitRepository extends JpaRepository<Visit, Integer> {
     List<Visit> findByPetId(int petId);
 
     List<Visit> findByPetIdIn(Collection<Integer> petIds);
+
+    List<Visit> findByVetId(int vetId);
+
+    List<Visit> findByVetIdAndDateBetween(int vetId, java.util.Date from, java.util.Date to);
+    List<Visit> findByVetIdAndDateGreaterThanEqual(int vetId, java.util.Date from);
+    List<Visit> findByVetIdAndDateLessThanEqual(int vetId, java.util.Date to);
 }

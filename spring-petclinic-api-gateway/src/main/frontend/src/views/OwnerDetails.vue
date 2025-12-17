@@ -51,12 +51,21 @@
               <tr>
                 <th>Visit Date</th>
                 <th>Description</th>
+                <th>Vétérinaire</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="visit in pet.visits" :key="visit.id">
                 <td>{{ formatDate(visit.date) }}</td>
                 <td>{{ visit.description }}</td>
+                <td>{{ vetName(visit.vetId) }}</td>
+                <td>
+                  <button
+                    class="btn btn-danger btn-xs"
+                    :disabled="!isFuture(visit.date)"
+                    @click="deleteVisit(visit.id)"
+                  >Supprimer</button>
+                </td>
               </tr>
               <tr>
                 <td>
@@ -81,6 +90,7 @@ import api from '../services/api'
 
 const route = useRoute()
 const owner = ref(null)
+const vets = ref([])
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
@@ -89,10 +99,37 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', options)
 }
 
+const vetName = (vetId) => {
+  if (!vetId) return 'Non assigné'
+  const v = vets.value.find(v => v.id === vetId)
+  return v ? `${v.firstName} ${v.lastName}` : 'Non assigné'
+}
+
+const isFuture = (dateString) => {
+  if (!dateString) return false
+  const d = new Date(dateString)
+  const now = new Date()
+  return d.getTime() > now.getTime()
+}
+
+const deleteVisit = async (visitId) => {
+  if (window.confirm('Confirmer la suppression de cette visite ?')) {
+    try {
+      await api.deleteVisit(visitId)
+      const response = await api.getOwner(route.params.ownerId)
+      owner.value = response.data
+    } catch (e) {
+      console.error('Delete failed', e)
+    }
+  }
+}
+
 onMounted(async () => {
   try {
     const response = await api.getOwner(route.params.ownerId)
     owner.value = response.data
+    const vetsResp = await api.getVets()
+    vets.value = vetsResp.data
   } catch (error) {
     console.error('Failed to load owner:', error)
   }
