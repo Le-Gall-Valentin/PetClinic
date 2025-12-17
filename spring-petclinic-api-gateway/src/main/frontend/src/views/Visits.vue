@@ -28,6 +28,18 @@
       </div>
 
       <div class="form-group">
+        <label class="col-sm-2 control-label">Vétérinaire (optionnel)</label>
+        <div class="col-sm-6">
+          <select class="form-control" v-model="selectedVetId">
+            <option :value="null">Non assigné</option>
+            <option v-for="vet in vets" :key="vet.id" :value="vet.id">
+              {{ vet.firstName }} {{ vet.lastName }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
         <div class="col-sm-6 col-sm-offset-2">
           <button class="btn btn-primary" type="submit">Submit</button>
         </div>
@@ -40,12 +52,14 @@
         <tr>
           <th>Date</th>
           <th>Description</th>
+          <th>Vétérinaire</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="visit in visits" :key="visit.id">
           <td>{{ formatDate(visit.date) }}</td>
           <td>{{ visit.description }}</td>
+          <td>{{ vetName(visit.vetId) }}</td>
         </tr>
       </tbody>
     </table>
@@ -63,6 +77,8 @@ const router = useRouter()
 const date = ref(new Date().toISOString().split('T')[0])
 const description = ref('')
 const visits = ref([])
+const vets = ref([])
+const selectedVetId = ref(null)
 
 const ownerId = route.params.ownerId
 const petId = route.params.petId
@@ -74,6 +90,12 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', options)
 }
 
+const vetName = (vetId) => {
+  if (!vetId) return 'Non assigné'
+  const v = vets.value.find(v => v.id === vetId)
+  return v ? `${v.firstName} ${v.lastName}` : 'Non assigné'
+}
+
 onMounted(async () => {
   try {
     const response = await api.getOwner(ownerId)
@@ -81,6 +103,8 @@ onMounted(async () => {
     if (pet && pet.visits) {
       visits.value = pet.visits
     }
+    const vetsResp = await api.getVets()
+    vets.value = vetsResp.data
   } catch (error) {
     console.error('Failed to load visits:', error)
   }
@@ -90,6 +114,9 @@ const submit = async () => {
   const data = {
     date: date.value,
     description: description.value
+  }
+  if (selectedVetId.value) {
+    data.vetId = selectedVetId.value
   }
 
   try {

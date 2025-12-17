@@ -47,6 +47,15 @@ export default {
     createVisit(ownerId, petId, visit) {
         return api.post(`/visit/owners/${ownerId}/pets/${petId}/visits`, visit)
     },
+    getVisitsByVet(vetId) {
+        return api.get(`/visit/vets/${vetId}/visits`)
+    },
+    getVisitsByVetWithDate(vetId, params) {
+        return api.get(`/visit/vets/${vetId}/visits`, { params })
+    },
+    deleteVisit(visitId) {
+        return api.delete(`/visit/visits/${visitId}`)
+    },
 
     // Vet endpoints
     getVets() {
