@@ -14,11 +14,11 @@
         <label class="col-sm-2 control-label">Name</label>
         <div class="col-sm-6">
           <input
-            class="form-control col-sm-4"
-            v-model="pet.name"
-            name="name"
-            required
-            type="text"
+              v-model="pet.name"
+              class="form-control col-sm-4"
+              name="name"
+              required
+              type="text"
           />
           <span v-if="errors.name" class="help-inline">Name is required.</span>
         </div>
@@ -28,10 +28,10 @@
         <label class="col-sm-2 control-label">Birth date</label>
         <div class="col-sm-6">
           <input
-            class="form-control"
-            v-model="pet.birthDate"
-            required
-            type="date"
+              v-model="pet.birthDate"
+              class="form-control"
+              required
+              type="date"
           />
           <span v-if="errors.birthDate" class="help-inline">Birth date is required.</span>
         </div>
@@ -40,7 +40,7 @@
       <div class="form-group">
         <label class="col-sm-2 control-label">Type</label>
         <div class="col-sm-6">
-          <select class="form-control" v-model="petTypeId">
+          <select v-model="petTypeId" class="form-control">
             <option v-for="type in types" :key="type.id" :value="type.id">
               {{ type.name }}
             </option>
@@ -58,8 +58,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {onMounted, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 import api from '../services/api'
 
 const route = useRoute()
@@ -98,8 +98,8 @@ onMounted(async () => {
           birthDate: existingPet.birthDate ? existingPet.birthDate.split('T')[0] : '',
           owner: `${petResponse.data.firstName} ${petResponse.data.lastName}`
         }
-                petTypeId.value = existingPet.type?.id ??
-          (types.value.find(t => t.name === existingPet.type?.name)?.id ?? null)
+        petTypeId.value = existingPet.type?.id ??
+            (types.value.find(t => t.name === existingPet.type?.name)?.id ?? null)
       }
     } else {
       // New pet
@@ -115,10 +115,8 @@ const submit = async () => {
   errors.value = {}
 
   const data = {
-    id: pet.value.id || 0,
     name: pet.value.name,
     birthDate: pet.value.birthDate,
-    pets: [],
     typeId: petTypeId.value == null ? null : Number(petTypeId.value)
   }
 

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.customers.model;
+package org.springframework.samples.petclinic.customers.model.pet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.springframework.core.style.ToStringCreator;
+import org.springframework.samples.petclinic.customers.model.owner.Owner;
+import org.springframework.samples.petclinic.customers.model.pettype.PetType;
 
 import java.util.Date;
 import java.util.Objects;

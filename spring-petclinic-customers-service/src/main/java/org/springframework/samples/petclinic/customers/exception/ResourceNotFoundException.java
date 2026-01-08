@@ -1,4 +1,4 @@
-package org.springframework.samples.petclinic.customers.web;
+package org.springframework.samples.petclinic.customers.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
