@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.customers.web;
+package org.springframework.samples.petclinic.customers.model.pet.dto;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.samples.petclinic.customers.model.Pet;
-import org.springframework.samples.petclinic.customers.model.PetType;
+import org.springframework.samples.petclinic.customers.model.pet.Pet;
+import org.springframework.samples.petclinic.customers.model.pettype.PetType;
 
 import java.util.Date;
 
@@ -25,7 +25,7 @@ import java.util.Date;
  * @author mszarlinski@bravurasolutions.com on 2016-12-05.
  */
 
-record PetDetails(
+public record PetDetails(
 
     long id,
 

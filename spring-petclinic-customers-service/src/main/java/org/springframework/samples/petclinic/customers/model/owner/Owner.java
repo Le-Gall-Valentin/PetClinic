@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.customers.model;
+package org.springframework.samples.petclinic.customers.model.owner;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Digits;
@@ -21,6 +21,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.core.style.ToStringCreator;
+import org.springframework.samples.petclinic.customers.model.pet.Pet;
 
 import java.util.*;
 
