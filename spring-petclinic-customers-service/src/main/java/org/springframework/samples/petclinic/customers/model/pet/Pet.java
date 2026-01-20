@@ -21,6 +21,7 @@ import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.customers.model.owner.Owner;
 import org.springframework.samples.petclinic.customers.model.pettype.PetType;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
@@ -56,6 +57,9 @@ public class Pet {
     @JsonIgnore
     private Owner owner;
 
+    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP")
+    private Instant deletedAt;
+
     @Override
     public String toString() {
         return new ToStringCreator(this)
@@ -65,43 +69,52 @@ public class Pet {
             .append("type", this.getType().getName())
             .append("ownerFirstname", this.getOwner().getFirstName())
             .append("ownerLastname", this.getOwner().getLastName())
+            .append("deletedAt", this.getDeletedAt())
             .toString();
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void delete() {
+        this.deletedAt = Instant.now();
     }
 
     public Integer getId() {
         return this.id;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    public Date getBirthDate() {
-        return this.birthDate;
-    }
-
-    public PetType getType() {
-        return this.type;
-    }
-
-    public Owner getOwner() {
-        return this.owner;
-    }
-
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
+    public Date getBirthDate() {
+        return this.birthDate;
+    }
+
     public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
     }
 
+    public PetType getType() {
+        return this.type;
+    }
+
     public void setType(PetType type) {
         this.type = type;
+    }
+
+    public Owner getOwner() {
+        return this.owner;
     }
 
     public void setOwner(Owner owner) {

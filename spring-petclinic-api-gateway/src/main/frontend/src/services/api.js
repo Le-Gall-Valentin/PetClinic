@@ -42,6 +42,9 @@ export default {
     updatePet(ownerId, petId, pet) {
         return api.put(`/customer/owners/${ownerId}/pets/${petId}`, pet)
     },
+    deletePet(ownerId, petId) {
+        return api.delete(`/customer/owners/${ownerId}/pets/${petId}`)
+    },
 
     // Visit endpoints
     createVisit(ownerId, petId, visit) {
@@ -51,7 +54,7 @@ export default {
         return api.get(`/visit/vets/${vetId}/visits`)
     },
     getVisitsByVetWithDate(vetId, params) {
-        return api.get(`/visit/vets/${vetId}/visits`, { params })
+        return api.get(`/visit/vets/${vetId}/visits`, {params})
     },
     deleteVisit(visitId) {
         return api.delete(`/visit/visits/${visitId}`)

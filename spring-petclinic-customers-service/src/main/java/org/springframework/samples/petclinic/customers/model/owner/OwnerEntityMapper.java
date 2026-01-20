@@ -3,10 +3,19 @@ package org.springframework.samples.petclinic.customers.model.owner;
 import org.springframework.samples.petclinic.customers.model.owner.dto.OwnerCreateDTO;
 import org.springframework.samples.petclinic.customers.model.owner.dto.OwnerDTO;
 import org.springframework.samples.petclinic.customers.model.owner.dto.OwnerUpdateDTO;
+import org.springframework.samples.petclinic.customers.model.pet.PetEntityMapper;
 import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
 
 @Component
 public class OwnerEntityMapper {
+
+    private final PetEntityMapper petEntityMapper;
+
+    public OwnerEntityMapper(PetEntityMapper petEntityMapper) {
+        this.petEntityMapper = petEntityMapper;
+    }
 
     public Owner map(final Owner owner, final OwnerCreateDTO request) {
         owner.setAddress(request.address());
@@ -34,7 +43,7 @@ public class OwnerEntityMapper {
             owner.getAddress(),
             owner.getCity(),
             owner.getTelephone(),
-            owner.getPetsInternal()
+            owner.getPetsInternal().stream().map(petEntityMapper::map).collect(Collectors.toSet())
         );
     }
 }

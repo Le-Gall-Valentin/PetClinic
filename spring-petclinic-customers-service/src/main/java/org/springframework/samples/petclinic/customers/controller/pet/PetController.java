@@ -20,7 +20,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.customers.model.pet.Pet;
 import org.springframework.samples.petclinic.customers.model.pet.PetEntityMapper;
-import org.springframework.samples.petclinic.customers.model.pet.dto.PetDetails;
+import org.springframework.samples.petclinic.customers.model.pet.dto.PetDTO;
 import org.springframework.samples.petclinic.customers.model.pet.dto.PetPostDTO;
 import org.springframework.samples.petclinic.customers.model.pet.dto.PetUpdateDTO;
 import org.springframework.samples.petclinic.customers.model.pettype.PetTypeEntityMapper;
@@ -46,8 +46,8 @@ class PetController {
     private final PetTypeEntityMapper petTypeEntityMapper;
     private final PetEntityMapper petEntityMapper;
 
-    public PetController(PetService petService, PetTypeEntityMapper petTypeEntityMapper,
-                         PetEntityMapper petEntityMapper) {
+    PetController(PetService petService, PetTypeEntityMapper petTypeEntityMapper,
+                  PetEntityMapper petEntityMapper) {
         this.petService = petService;
         this.petTypeEntityMapper = petTypeEntityMapper;
         this.petEntityMapper = petEntityMapper;
@@ -62,11 +62,11 @@ class PetController {
     }
 
     @PostMapping("/owners/{ownerId}/pets")
-    public ResponseEntity<PetDetails> processCreationForm(
+    public ResponseEntity<PetDTO> processCreationForm(
         @RequestBody PetPostDTO petPostDTO,
         @PathVariable("ownerId") @Min(1) int ownerId) {
 
-        PetDetails createdPet = petEntityMapper.map(petService.createPet(
+        PetDTO createdPet = petEntityMapper.map(petService.createPet(
             petEntityMapper.map(new Pet(), petPostDTO),
             ownerId,
             petPostDTO.typeId()
@@ -77,7 +77,7 @@ class PetController {
     }
 
     @PutMapping("/owners/*/pets/{petId}")
-    public ResponseEntity<PetDetails> processUpdateForm(
+    public ResponseEntity<PetDTO> processUpdateForm(
         @RequestBody PetUpdateDTO petUpdateDTO,
         @PathVariable int petId
     ) {
@@ -91,8 +91,13 @@ class PetController {
     }
 
     @GetMapping("owners/*/pets/{petId}")
-    public ResponseEntity<PetDetails> findPet(@PathVariable("petId") int petId) {
+    public ResponseEntity<PetDTO> findPet(@PathVariable("petId") int petId) {
         return ResponseEntity.ok(petEntityMapper.map(petService.findPetById(petId)));
     }
 
+    @DeleteMapping("owners/*/pets/{petId}")
+    public ResponseEntity<Void> deletePet(@PathVariable("petId") int petId) {
+        petService.deletePet(petId);
+        return ResponseEntity.noContent().build();
+    }
 }

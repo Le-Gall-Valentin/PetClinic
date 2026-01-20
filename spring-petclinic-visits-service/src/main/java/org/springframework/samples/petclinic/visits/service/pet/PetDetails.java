@@ -1,3 +1,4 @@
+package org.springframework.samples.petclinic.visits.service.pet;
 /*
  * Copyright 2002-2021 the original author or authors.
  *
@@ -13,11 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.api.dto;
 
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Maciej Szarlinski
@@ -25,23 +22,17 @@ import java.util.List;
 public record PetDetails(
     int id,
     String name,
+    String owner,
     String birthDate,
     PetType type,
-    List<VisitDetails> visits,
     boolean deleted) {
-
-    public PetDetails {
-        if (visits == null) {
-            visits = new ArrayList<>();
-        }
-    }
 
     public static final class PetDetailsBuilder {
         private int id;
         private String name;
         private String birthDate;
         private PetType type;
-        private List<VisitDetails> visits;
+        private String owner;
         private boolean deleted;
 
         private PetDetailsBuilder() {
@@ -71,8 +62,8 @@ public record PetDetails(
             return this;
         }
 
-        public PetDetailsBuilder visits(List<VisitDetails> visits) {
-            this.visits = visits;
+        public PetDetailsBuilder owner(String owner) {
+            this.owner = owner;
             return this;
         }
 
@@ -82,7 +73,7 @@ public record PetDetails(
         }
 
         public PetDetails build() {
-            return new PetDetails(id, name, birthDate, type, visits, deleted);
+            return new PetDetails(id, name, owner, birthDate, type, deleted);
         }
     }
 }
