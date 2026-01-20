@@ -18,6 +18,10 @@ package org.springframework.samples.petclinic.customers.controller.owner;
 import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.customers.model.owner.Owner;
 import org.springframework.samples.petclinic.customers.model.owner.OwnerEntityMapper;
@@ -28,7 +32,6 @@ import org.springframework.samples.petclinic.customers.service.owner.OwnerServic
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 /**
  * @author Juergen Hoeller
@@ -76,8 +79,16 @@ class OwnerController {
      * Read List of Owners
      */
     @GetMapping
-    public ResponseEntity<List<OwnerDTO>> findAll() {
-        return ResponseEntity.ok(ownerService.getAllOwners().stream().map(ownerEntityMapper::map).toList());
+    public ResponseEntity<Page<OwnerDTO>> findAll(
+        @RequestParam(defaultValue = "", required = false) String petName,
+        @RequestParam(defaultValue = "", required = false) String firstName,
+        @RequestParam(defaultValue = "", required = false) String lastName,
+        @RequestParam(defaultValue = "", required = false) String city,
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(ownerService.getAllOwners(
+            petName, firstName, lastName, city, pageable
+        ).map(ownerEntityMapper::map));
     }
 
     /**

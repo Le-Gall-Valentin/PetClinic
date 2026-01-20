@@ -2,13 +2,13 @@ package org.springframework.samples.petclinic.customers.service.owner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.samples.petclinic.customers.exception.ResourceNotFoundException;
 import org.springframework.samples.petclinic.customers.model.owner.Owner;
 import org.springframework.samples.petclinic.customers.repository.OwnerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class OwnerService {
@@ -33,9 +33,17 @@ public class OwnerService {
     }
 
     @Transactional(readOnly = true)
-    public List<Owner> getAllOwners() {
-        return ownerRepository.findAll();
+    public Page<Owner> getAllOwners(
+        String petName,
+        String firstName,
+        String lastName,
+        String city,
+        Pageable pageable) {
+        return ownerRepository.searchOwners(
+            petName, firstName, lastName, city, pageable
+        );
     }
+
 
     @Transactional()
     public Owner updateOwner(int ownerId, final Owner owner) {

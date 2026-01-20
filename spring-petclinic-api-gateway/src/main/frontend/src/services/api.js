@@ -19,8 +19,18 @@ api.interceptors.response.use(
 
 export default {
     // Owner endpoints
-    getOwners() {
-        return api.get('/customer/owners')
+    getOwners(params) {
+        const query = new URLSearchParams()
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach(v => query.append(key, v))
+            } else if (value !== null && value !== '') {
+                query.append(key, value)
+            }
+        })
+
+        return api.get(`/customer/owners?${query.toString()}`)
     },
     getOwner(ownerId) {
         return api.get(`/gateway/owners/${ownerId}`)
