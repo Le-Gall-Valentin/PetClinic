@@ -19,8 +19,18 @@ api.interceptors.response.use(
 
 export default {
     // Owner endpoints
-    getOwners() {
-        return api.get('/customer/owners')
+    getOwners(params) {
+        const query = new URLSearchParams()
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach(v => query.append(key, v))
+            } else if (value !== null && value !== '') {
+                query.append(key, value)
+            }
+        })
+
+        return api.get(`/customer/owners?${query.toString()}`)
     },
     getOwner(ownerId) {
         return api.get(`/gateway/owners/${ownerId}`)
@@ -42,6 +52,9 @@ export default {
     updatePet(ownerId, petId, pet) {
         return api.put(`/customer/owners/${ownerId}/pets/${petId}`, pet)
     },
+    deletePet(ownerId, petId) {
+        return api.delete(`/customer/owners/${ownerId}/pets/${petId}`)
+    },
 
     // Visit endpoints
     createVisit(ownerId, petId, visit) {
@@ -51,7 +64,7 @@ export default {
         return api.get(`/visit/vets/${vetId}/visits`)
     },
     getVisitsByVetWithDate(vetId, params) {
-        return api.get(`/visit/vets/${vetId}/visits`, { params })
+        return api.get(`/visit/vets/${vetId}/visits`, {params})
     },
     deleteVisit(visitId) {
         return api.delete(`/visit/visits/${visitId}`)

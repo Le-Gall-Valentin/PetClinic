@@ -1,6 +1,6 @@
 package org.springframework.samples.petclinic.customers.model.pet;
 
-import org.springframework.samples.petclinic.customers.model.pet.dto.PetDetails;
+import org.springframework.samples.petclinic.customers.model.pet.dto.PetDTO;
 import org.springframework.samples.petclinic.customers.model.pet.dto.PetPostDTO;
 import org.springframework.samples.petclinic.customers.model.pet.dto.PetUpdateDTO;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ public class PetEntityMapper {
         return pet;
     }
 
-    public PetDetails map(final Pet pet) {
-        return new PetDetails(pet);
+    public PetDTO map(final Pet pet) {
+        return new PetDTO(pet);
     }
 }

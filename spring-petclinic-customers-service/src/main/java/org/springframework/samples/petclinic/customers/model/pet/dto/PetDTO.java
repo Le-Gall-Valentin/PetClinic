@@ -25,7 +25,7 @@ import java.util.Date;
  * @author mszarlinski@bravurasolutions.com on 2016-12-05.
  */
 
-public record PetDetails(
+public record PetDTO(
 
     long id,
 
@@ -36,9 +36,16 @@ public record PetDetails(
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     Date birthDate,
 
-    PetType type
+    PetType type,
+
+    boolean deleted
 ) {
-    public PetDetails(Pet pet) {
-        this(pet.getId(), pet.getName(), pet.getOwner().getFirstName() + " " + pet.getOwner().getLastName(), pet.getBirthDate(), pet.getType());
+    public PetDTO(Pet pet) {
+        this(pet.getId(),
+            pet.getName(),
+            pet.getOwner().getFirstName() + " " + pet.getOwner().getLastName(),
+            pet.getBirthDate(),
+            pet.getType(),
+            pet.getDeletedAt() != null);
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.customers.model.owner.Owner;
 import org.springframework.samples.petclinic.customers.model.pet.Pet;
 import org.springframework.samples.petclinic.customers.model.pet.PetEntityMapper;
-import org.springframework.samples.petclinic.customers.model.pet.dto.PetDetails;
+import org.springframework.samples.petclinic.customers.model.pet.dto.PetDTO;
 import org.springframework.samples.petclinic.customers.model.pettype.PetType;
 import org.springframework.samples.petclinic.customers.model.pettype.PetTypeEntityMapper;
 import org.springframework.samples.petclinic.customers.service.pet.PetService;
@@ -42,7 +42,7 @@ class PetControllerTest {
         Pet pet = setupPet();
 
         when(petService.findPetById(2)).thenReturn(pet);
-        when(petEntityMapper.map(pet)).thenReturn(new PetDetails(pet));
+        when(petEntityMapper.map(pet)).thenReturn(new PetDTO(pet));
 
         mvc.perform(get("/owners/2/pets/2").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())

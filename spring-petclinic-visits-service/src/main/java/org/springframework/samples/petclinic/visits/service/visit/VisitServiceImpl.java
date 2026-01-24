@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.samples.petclinic.visits.model.Visit;
 import org.springframework.samples.petclinic.visits.model.VisitRepository;
+import org.springframework.samples.petclinic.visits.service.pet.PetDetails;
+import org.springframework.samples.petclinic.visits.service.pet.PetServiceClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,14 +18,19 @@ public class VisitServiceImpl implements VisitService {
     private static final Logger log = LoggerFactory.getLogger(VisitServiceImpl.class);
 
     private final VisitRepository visitRepository;
+    private final PetServiceClient petServiceClient;
 
-    public VisitServiceImpl(VisitRepository visitRepository) {
+    public VisitServiceImpl(VisitRepository visitRepository, PetServiceClient petServiceClient) {
         this.visitRepository = visitRepository;
+        this.petServiceClient = petServiceClient;
     }
 
     @Override
     @Transactional
     public Visit createVisit(int petId, org.springframework.samples.petclinic.visits.model.visit.DTO.VisitPostDTO visitPostDTO) {
+        if (petIsDeleted(petId)) {
+            throw new IllegalStateException("Cannot create visit for deleted pet");
+        }
         final Visit visit = new Visit();
         visit.setPetId(petId);
         visit.setDate(visitPostDTO.date());
@@ -72,11 +79,20 @@ public class VisitServiceImpl implements VisitService {
             throw new jakarta.persistence.EntityNotFoundException("Visit not found: " + visitId);
         }
         final Visit visit = opt.get();
+
+        if (petIsDeleted(visit.getPetId())) {
+            throw new IllegalStateException("Cannot delete visit for deleted pet");
+        }
+
         final Date now = new Date();
         if (visit.getDate() == null || !visit.getDate().after(now)) {
             throw new IllegalStateException("Only future visits can be deleted");
         }
         log.info("Deleting visit {}", visitId);
         visitRepository.deleteById(visitId);
+    }
+
+    private boolean petIsDeleted(final int petId) {
+        return Boolean.TRUE.equals(petServiceClient.getPet(petId).map(PetDetails::deleted).block());
     }
 }

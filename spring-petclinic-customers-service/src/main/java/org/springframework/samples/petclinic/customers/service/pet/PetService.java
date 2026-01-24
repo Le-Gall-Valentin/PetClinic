@@ -2,6 +2,7 @@ package org.springframework.samples.petclinic.customers.service.pet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.samples.petclinic.customers.exception.BadRequestException;
 import org.springframework.samples.petclinic.customers.exception.ResourceNotFoundException;
 import org.springframework.samples.petclinic.customers.model.owner.Owner;
 import org.springframework.samples.petclinic.customers.model.pet.Pet;
@@ -9,9 +10,12 @@ import org.springframework.samples.petclinic.customers.model.pettype.PetType;
 import org.springframework.samples.petclinic.customers.repository.OwnerRepository;
 import org.springframework.samples.petclinic.customers.repository.PetRepository;
 import org.springframework.samples.petclinic.customers.repository.PetTypeRepository;
+import org.springframework.samples.petclinic.customers.service.visit.VisitsServiceClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -20,12 +24,14 @@ public class PetService {
     private final PetRepository petRepository;
     private final OwnerRepository ownerRepository;
     private final PetTypeRepository petTypeRepository;
+    private final VisitsServiceClient visitsServiceClient;
 
     public PetService(PetRepository petRepository, OwnerRepository ownerRepository,
-                      PetTypeRepository petTypeRepository) {
+                      PetTypeRepository petTypeRepository, VisitsServiceClient visitsServiceClient) {
         this.petRepository = petRepository;
         this.ownerRepository = ownerRepository;
         this.petTypeRepository = petTypeRepository;
+        this.visitsServiceClient = visitsServiceClient;
     }
 
     @Transactional(readOnly = true)
@@ -52,6 +58,10 @@ public class PetService {
     public Pet updatePet(final int petId, final Pet pet, final int petTypeId) {
         Pet updatedPet = findPetById(petId);
 
+        if (updatedPet.getDeletedAt() != null) {
+            throw new BadRequestException("Cannot update deleted pet");
+        }
+
         PetType petType = getPetTypeById(petTypeId);
 
         updatedPet.setName(pet.getName());
@@ -72,5 +82,25 @@ public class PetService {
     public Pet findPetById(final int petId) {
         return petRepository.findPetById(petId)
             .orElseThrow(() -> new ResourceNotFoundException("Pet " + petId + " not found"));
+    }
+
+    @Transactional()
+    public void deletePet(final int petId) {
+        Boolean hasFutureVisits = visitsServiceClient.getVisitsForPets(Collections.singletonList(petId))
+            .map(visits -> visits.getItems().stream()
+                .filter(v -> v.getPetId() == petId)
+                .anyMatch(v -> LocalDate.parse(v.getDate()).isAfter(LocalDate.now())))
+            .block();
+
+        if (Boolean.TRUE.equals(hasFutureVisits)) {
+            throw new BadRequestException("Cannot delete pet with future visits");
+        }
+
+        Pet deletedPet = findPetById(petId);
+        if (deletedPet.getDeletedAt() == null) {
+            deletedPet.delete();
+        }
+        log.info("Deleting pet {}", deletedPet);
+        petRepository.save(deletedPet);
     }
 }

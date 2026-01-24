@@ -15,7 +15,12 @@
  */
 package org.springframework.samples.petclinic.customers.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.samples.petclinic.customers.model.owner.Owner;
 
 /**
@@ -28,4 +33,29 @@ import org.springframework.samples.petclinic.customers.model.owner.Owner;
  * @author Michael Isvy
  * @author Maciej Szarlinski
  */
-public interface OwnerRepository extends JpaRepository<Owner, Integer> { }
+public interface OwnerRepository extends JpaRepository<Owner, Integer>, JpaSpecificationExecutor<Owner> {
+
+    @Query("""
+        SELECT o
+        FROM Owner o
+        WHERE (:firstName IS NULL OR :firstName = '' OR LOWER(o.firstName) LIKE LOWER(CONCAT('%', :firstName, '%')))
+          AND (:lastName IS NULL OR :lastName = '' OR LOWER(o.lastName) LIKE LOWER(CONCAT('%', :lastName, '%')))
+          AND (:city IS NULL OR :city = '' OR LOWER(o.city) LIKE LOWER(CONCAT('%', :city, '%')))
+          AND (
+              :petName IS NULL OR :petName = ''
+              OR EXISTS (
+                  SELECT 1
+                  FROM Pet p
+                  WHERE p.owner = o
+                    AND LOWER(p.name) LIKE LOWER(CONCAT('%', :petName, '%'))
+              )
+          )
+        """)
+    Page<Owner> searchOwners(
+        @Param("petName") String petName,
+        @Param("firstName") String firstName,
+        @Param("lastName") String lastName,
+        @Param("city") String city,
+        Pageable pageable
+    );
+}
