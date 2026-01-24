@@ -8,6 +8,7 @@ import org.springframework.samples.petclinic.visits.service.pet.PetDetails;
 import org.springframework.samples.petclinic.visits.service.pet.PetServiceClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.samples.petclinic.visits.service.vet.VetServiceClient;
 
 import java.util.Date;
 import java.util.List;
@@ -19,10 +20,12 @@ public class VisitServiceImpl implements VisitService {
 
     private final VisitRepository visitRepository;
     private final PetServiceClient petServiceClient;
+    private final VetServiceClient vetServiceClient;
 
-    public VisitServiceImpl(VisitRepository visitRepository, PetServiceClient petServiceClient) {
+    public VisitServiceImpl(VisitRepository visitRepository, PetServiceClient petServiceClient, VetServiceClient vetServiceClient) {
         this.visitRepository = visitRepository;
         this.petServiceClient = petServiceClient;
+        this.vetServiceClient = vetServiceClient;
     }
 
     @Override
@@ -30,6 +33,9 @@ public class VisitServiceImpl implements VisitService {
     public Visit createVisit(int petId, org.springframework.samples.petclinic.visits.model.visit.DTO.VisitPostDTO visitPostDTO) {
         if (petIsDeleted(petId)) {
             throw new IllegalStateException("Cannot create visit for deleted pet");
+        }
+        if (visitPostDTO.vetId() != null && vetIsDeleted(visitPostDTO.vetId())) {
+            throw new IllegalStateException("Cannot create visit for deleted vet");
         }
         final Visit visit = new Visit();
         visit.setPetId(petId);
@@ -83,6 +89,9 @@ public class VisitServiceImpl implements VisitService {
         if (petIsDeleted(visit.getPetId())) {
             throw new IllegalStateException("Cannot delete visit for deleted pet");
         }
+        if (visit.getVetId() != null && vetIsDeleted(visit.getVetId())) {
+            throw new IllegalStateException("Cannot delete visit for deleted vet");
+        }
 
         final Date now = new Date();
         if (visit.getDate() == null || !visit.getDate().after(now)) {
@@ -94,5 +103,9 @@ public class VisitServiceImpl implements VisitService {
 
     private boolean petIsDeleted(final int petId) {
         return Boolean.TRUE.equals(petServiceClient.getPet(petId).map(PetDetails::deleted).block());
+    }
+
+    private boolean vetIsDeleted(final int vetId) {
+        return Boolean.TRUE.equals(vetServiceClient.getVet(vetId).map(v -> v.deleted()).block());
     }
 }

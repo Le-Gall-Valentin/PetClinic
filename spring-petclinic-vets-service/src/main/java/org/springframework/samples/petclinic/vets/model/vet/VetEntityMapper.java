@@ -22,6 +22,6 @@ public class VetEntityMapper {
 
     public VetDTO map(final Vet vet) {
         final java.util.List<SpecialtyDTO> specialties = vet.getSpecialties().stream().map(specialtyMapper::map).toList();
-        return new VetDTO(vet.getId(), vet.getFirstName(), vet.getLastName(), specialties);
+        return new VetDTO(vet.getId(), vet.getFirstName(), vet.getLastName(), specialties, vet.getDeletedAt() != null);
     }
 }

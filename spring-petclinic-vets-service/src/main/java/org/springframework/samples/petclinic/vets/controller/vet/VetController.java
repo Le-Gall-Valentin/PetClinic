@@ -68,4 +68,10 @@ public class VetController {
     public ResponseEntity<VetDTO> findVet(@PathVariable("vetId") @Min(1) int vetId) {
         return ResponseEntity.ok(vetEntityMapper.map(vetService.getVetById(vetId)));
     }
+
+    @DeleteMapping("/{vetId}")
+    public ResponseEntity<Void> deleteVet(@PathVariable("vetId") @Min(1) int vetId) {
+        vetService.deleteVet(vetId);
+        return ResponseEntity.noContent().build();
+    }
 }

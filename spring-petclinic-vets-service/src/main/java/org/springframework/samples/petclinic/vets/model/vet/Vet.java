@@ -22,6 +22,7 @@ import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.samples.petclinic.vets.model.specialty.Specialty;
 
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -54,6 +55,9 @@ public class Vet {
     @JoinTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"),
         inverseJoinColumns = @JoinColumn(name = "specialty_id"))
     private Set<Specialty> specialties;
+
+    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP")
+    private Instant deletedAt;
 
     protected Set<Specialty> getSpecialtiesInternal() {
         if (this.specialties == null) {
@@ -103,6 +107,14 @@ public class Vet {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void delete() {
+        this.deletedAt = Instant.now();
     }
 
     @Override

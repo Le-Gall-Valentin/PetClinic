@@ -18,17 +18,18 @@ package org.springframework.samples.petclinic.api.boundary.web;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.samples.petclinic.api.application.CustomersServiceClient;
+import org.springframework.samples.petclinic.api.application.PetServiceClient;
+import org.springframework.samples.petclinic.api.application.VetServiceClient;
 import org.springframework.samples.petclinic.api.application.VisitsServiceClient;
-import org.springframework.samples.petclinic.api.dto.OwnerDetails;
-import org.springframework.samples.petclinic.api.dto.Visits;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.samples.petclinic.api.dto.*;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author Maciej Szarlinski
@@ -38,15 +39,21 @@ import java.util.function.Function;
 public class ApiGatewayController {
 
     private final CustomersServiceClient customersServiceClient;
+    private final VetServiceClient vetServiceClient;
+    private final PetServiceClient petServiceClient;
 
     private final VisitsServiceClient visitsServiceClient;
 
     private final ReactiveCircuitBreakerFactory cbFactory;
 
     public ApiGatewayController(CustomersServiceClient customersServiceClient,
+                                VetServiceClient vetServiceClient,
+                                PetServiceClient petServiceClient,
                                 VisitsServiceClient visitsServiceClient,
                                 ReactiveCircuitBreakerFactory cbFactory) {
         this.customersServiceClient = customersServiceClient;
+        this.vetServiceClient = vetServiceClient;
+        this.petServiceClient = petServiceClient;
         this.visitsServiceClient = visitsServiceClient;
         this.cbFactory = cbFactory;
     }
@@ -79,5 +86,37 @@ public class ApiGatewayController {
 
     private Mono<Visits> emptyVisitsForPets() {
         return Mono.just(new Visits(List.of()));
+    }
+
+    @GetMapping("vets/{vetId}")
+    public Mono<VetPage> getVetPage(final @PathVariable int vetId,
+                                    @RequestParam(value = "from", required = false) String from,
+                                    @RequestParam(value = "to", required = false) String to) {
+        final Mono<VetDetails> vetMono = vetServiceClient.getVet(vetId);
+        final Mono<List<VisitDetails>> visitsMono = visitsServiceClient.getVisitsByVet(vetId, from, to);
+
+        return Mono.zip(vetMono, visitsMono)
+            .flatMap(tuple -> {
+                final VetDetails vet = tuple.getT1();
+                final List<VisitDetails> visits = tuple.getT2();
+                final List<Integer> petIds = visits.stream().map(VisitDetails::petId).distinct().toList();
+                if (petIds.isEmpty()) {
+                    return Mono.just(new VetPage(vet, List.of()));
+                }
+                final ReactiveCircuitBreaker cb = cbFactory.create("getVetPage");
+                final List<Mono<org.springframework.samples.petclinic.api.dto.PetDetails>> petCalls =
+                    petIds.stream().map(petServiceClient::getPet).toList();
+                return cb.run(Mono.zip(petCalls, objects -> {
+                        final Map<Integer, org.springframework.samples.petclinic.api.dto.PetDetails> map = Arrays.stream(objects)
+                            .map(PetDetails.class::cast)
+                            .collect(Collectors.toMap(org.springframework.samples.petclinic.api.dto.PetDetails::id, Function.identity()));
+                        final List<VisitWithPet> enriched = visits.stream()
+                            .map(v -> new VisitWithPet(v, map.get(v.petId())))
+                            .toList();
+                        return new VetPage(vet, enriched);
+                    }),
+                    throwable -> Mono.just(new VetPage(vet, List.of()))
+                );
+            });
     }
 }

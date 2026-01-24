@@ -16,6 +16,7 @@ package org.springframework.samples.petclinic.api.application;
  * limitations under the License.
  */
 
+import org.springframework.samples.petclinic.api.dto.VetDetails;
 import org.springframework.samples.petclinic.api.dto.Vets;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -45,6 +46,14 @@ public class VetServiceClient {
             .uri(hostname + "visits/vets?vetId={vetId}", joinIds(vetIds))
             .retrieve()
             .bodyToMono(Vets.class);
+    }
+
+    public Mono<VetDetails> getVet(final int vetId) {
+        return webClientBuilder.build()
+            .get()
+            .uri(hostname + "vets/{vetId}", vetId)
+            .retrieve()
+            .bodyToMono(VetDetails.class);
     }
 
     private String joinIds(List<Integer> petIds) {

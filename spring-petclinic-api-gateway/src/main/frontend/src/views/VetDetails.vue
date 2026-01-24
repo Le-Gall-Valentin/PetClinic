@@ -8,6 +8,10 @@
         <td><b>{{ vet.firstName }} {{ vet.lastName }}</b></td>
       </tr>
       <tr>
+        <th class="col-sm-3">Status</th>
+        <td><b :class="{'text-danger': isDeleted, 'text-success': !isDeleted}">{{ isDeleted ? 'Supprimé' : 'Actif' }}</b></td>
+      </tr>
+      <tr>
         <th class="col-sm-3">Specialties</th>
         <td><b v-for="(specialty, index) in vet.specialties" :key="specialty.id">
           {{ specialty.name }}<b v-if="index < vet.specialties.length - 1">, </b>
@@ -16,6 +20,13 @@
       <tr>
         <td>
           <router-link :to="`/vets/${vet.id}/edit`" class="btn btn-primary">Edit Veterinarian</router-link>
+        </td>
+        <td>
+          <button
+              :disabled="hasFutureVisits() || isDeleted"
+              class="btn btn-danger"
+              @click="deleteVet(vet.id)"
+          >Supprimer le vétérinaire</button>
         </td>
       </tr>
     </table>
@@ -50,20 +61,20 @@
       <tr>
         <th>Date</th>
         <th>Description</th>
-        <th>Pet Id</th>
+        <th>Animal</th>
         <th></th>
       </tr>
       </thead>
       <tbody>
-      <tr v-for="visit in filteredVisits" :key="visit.id">
-        <td>{{ formatDate(visit.date) }}</td>
-        <td>{{ visit.description }}</td>
-        <td>{{ visit.petId }}</td>
+      <tr v-for="vw in filteredVisits" :key="vw.visit.id">
+        <td>{{ formatDate(vw.visit.date) }}</td>
+        <td>{{ vw.visit.description }}</td>
+        <td>{{ vw.pet?.name }} ({{ vw.pet?.type?.name }})</td>
         <td>
           <button
-              :disabled="!isFuture(visit.date)"
+              :disabled="!isFuture(vw.visit.date)"
               class="btn btn-danger btn-xs"
-              @click="confirmDelete(visit.id)"
+              @click="confirmDelete(vw.visit.id)"
           >Supprimer
           </button>
         </td>
@@ -74,7 +85,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import {onMounted, ref, computed} from 'vue'
 import {useRoute} from 'vue-router'
 import api from '../services/api'
 
@@ -86,7 +97,15 @@ const from = ref('')
 const to = ref('')
 const typeFilter = ref('')
 const petTypes = ref([])
-const petIdToType = ref({})
+const isDeleted = computed(() => !!vet.value?.deleted)
+const hasFutureVisits = () => {
+  if (!visits.value) return false
+  const now = new Date()
+  return visits.value.some(v => {
+    const d = new Date(v.date)
+    return d.getTime() > now.getTime()
+  })
+}
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
@@ -106,8 +125,9 @@ const applyFilters = async () => {
   const params = {}
   if (from.value) params.from = from.value
   if (to.value) params.to = to.value
-  const vresp = await api.getVisitsByVetWithDate(route.params.vetId, params)
-  visits.value = vresp.data
+  const page = await api.getVetPage(route.params.vetId, params)
+  vet.value = page.data.vet
+  visits.value = page.data.visits || []
   filterByType()
 }
 
@@ -115,7 +135,7 @@ const filterByType = () => {
   if (!typeFilter.value) {
     filteredVisits.value = visits.value
   } else {
-    filteredVisits.value = visits.value.filter(v => petIdToType.value[v.petId] === typeFilter.value)
+    filteredVisits.value = visits.value.filter(vw => vw.pet?.type?.name === typeFilter.value)
   }
 }
 
@@ -130,23 +150,28 @@ const confirmDelete = async (visitId) => {
   }
 }
 
+const deleteVet = async (vetId) => {
+  if (window.confirm('Confirmer la suppression de ce vétérinaire ?')) {
+    try {
+      await api.deleteVet(vetId)
+      await applyFilters()
+    } catch (e) {
+      console.error('Delete vet failed', e)
+    }
+  }
+}
+
 onMounted(async () => {
   try {
-    const response = await api.getVet(route.params.vetId)
-    vet.value = response.data
-    const vresp = await api.getVisitsByVet(route.params.vetId)
-    visits.value = vresp.data
+    const page = await api.getVetPage(route.params.vetId)
+    vet.value = page.data.vet
+    visits.value = page.data.visits || []
     filteredVisits.value = visits.value
-    const ownersResp = await api.getOwners()
-    const map = {}
     const typesSet = new Set()
-    ownersResp.data.forEach(o => {
-      (o.pets || []).forEach(p => {
-        map[p.id] = p.type?.name
-        if (p.type?.name) typesSet.add(p.type.name)
-      })
+    visits.value.forEach(vw => {
+      const t = vw.pet?.type?.name
+      if (t) typesSet.add(t)
     })
-    petIdToType.value = map
     petTypes.value = Array.from(typesSet)
   } catch (error) {
     console.error('Failed to load vet:', error)

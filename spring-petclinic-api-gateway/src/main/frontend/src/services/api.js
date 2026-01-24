@@ -85,6 +85,12 @@ export default {
     updateVet(vetId, vet) {
         return api.put(`/vet/vets/${vetId}`, vet)
     },
+    deleteVet(vetId) {
+        return api.delete(`/vet/vets/${vetId}`)
+    },
+    getVetPage(vetId, params = {}) {
+        return api.get(`/gateway/vets/${vetId}`, {params})
+    },
     getSpecialties() {
         return api.get('/vet/specialties')
     },

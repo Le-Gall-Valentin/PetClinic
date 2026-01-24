@@ -15,6 +15,7 @@
  */
 package org.springframework.samples.petclinic.api.application;
 
+import org.springframework.samples.petclinic.api.dto.VisitDetails;
 import org.springframework.samples.petclinic.api.dto.Visits;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -30,10 +31,9 @@ import static java.util.stream.Collectors.joining;
 @Component
 public class VisitsServiceClient {
 
+    private final WebClient.Builder webClientBuilder;
     // Could be changed for testing purpose
     private String hostname = "http://visits-service/";
-
-    private final WebClient.Builder webClientBuilder;
 
     public VisitsServiceClient(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
@@ -45,6 +45,24 @@ public class VisitsServiceClient {
             .uri(hostname + "pets/visits?petId={petId}", joinIds(petIds))
             .retrieve()
             .bodyToMono(Visits.class);
+    }
+
+    public Mono<java.util.List<VisitDetails>> getVisitsByVet(final int vetId, final String from, final String to) {
+        final var builder = webClientBuilder.build().get()
+            .uri(uriBuilder -> {
+                uriBuilder
+                    .scheme("http")
+                    .host("visits-service")
+                    .path("/vets/{vetId}/visits");
+                return (from != null || to != null)
+                    ? java.net.URI.create("http://visits-service/vets/" + vetId + "/visits" +
+                    (from != null ? "?from=" + from : "") +
+                    (to != null ? (from != null ? "&" : "?") + "to=" + to : ""))
+                    : java.net.URI.create("http://visits-service/vets/" + vetId + "/visits");
+            });
+        return builder.retrieve()
+            .bodyToFlux(VisitDetails.class)
+            .collectList();
     }
 
     private String joinIds(List<Integer> petIds) {

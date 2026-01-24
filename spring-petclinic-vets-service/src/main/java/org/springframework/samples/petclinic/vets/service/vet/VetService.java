@@ -13,4 +13,6 @@ public interface VetService {
     Vet addVet(VetPostDTO vetPostDTO);
 
     void updateVet(int vetId, VetPostDTO vetPostDTO);
+
+    void deleteVet(int vetId);
 }

@@ -77,7 +77,7 @@
               <td>{{ vetName(visit.vetId) }}</td>
               <td>
                 <button
-                    :disabled="!isFuture(visit.date)"
+                    :disabled="!isFuture(visit.date) || vetIsDeleted(visit.vetId)"
                     class="btn btn-danger btn-xs"
                     @click="deleteVisit(visit.id)"
                 >Supprimer
@@ -142,6 +142,11 @@ const vetName = (vetId) => {
   if (!vetId) return 'Non assigné'
   const v = vets.value.find(v => v.id === vetId)
   return v ? `${v.firstName} ${v.lastName}` : 'Non assigné'
+}
+const vetIsDeleted = (vetId) => {
+  if (!vetId) return false
+  const v = vets.value.find(v => v.id === vetId)
+  return !!v?.deleted
 }
 
 const isFuture = (dateString) => {

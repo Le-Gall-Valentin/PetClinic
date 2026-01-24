@@ -6,6 +6,7 @@ public record VetDetails(
     Integer id,
     String firstName,
     String lastName,
-    List<SpecialtyDetails> specialties
+    List<SpecialtyDetails> specialties,
+    boolean deleted
 ) {
 }

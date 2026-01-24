@@ -2,6 +2,12 @@
   <div>
     <h2>Veterinarians</h2>
 
+    <div class="form-check mb-3">
+      <input id="toggleDeletedVets" v-model="viewDeleted" class="form-check-input" type="checkbox"/>
+      <label class="form-check-label" for="toggleDeletedVets">
+        Afficher les vétérinaires supprimés
+      </label>
+    </div>
     <table class="table table-striped">
       <thead>
       <tr>
@@ -10,7 +16,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="vet in vets" :key="vet.id">
+      <tr v-for="vet in visibleVets" :key="vet.id" :class="{'table-danger': vet.deleted}">
         <td>
           <router-link :to="`/vets/${vet.id}`">
             {{ vet.firstName }} {{ vet.lastName }}
@@ -29,10 +35,15 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import {onMounted, ref, computed} from 'vue'
 import api from '../services/api'
 
 const vets = ref([])
+const viewDeleted = ref(false)
+const visibleVets = computed(() => {
+  const items = vets.value || []
+  return viewDeleted.value ? items : items.filter(v => !v?.deleted)
+})
 
 onMounted(async () => {
   try {

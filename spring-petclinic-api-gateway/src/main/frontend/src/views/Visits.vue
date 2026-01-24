@@ -32,7 +32,7 @@
         <div class="col-sm-6">
           <select class="form-control" v-model="selectedVetId">
             <option :value="null">Non assigné</option>
-            <option v-for="vet in vets" :key="vet.id" :value="vet.id">
+            <option v-for="vet in activeVets" :key="vet.id" :value="vet.id">
               {{ vet.firstName }} {{ vet.lastName }}
             </option>
           </select>
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../services/api'
 
@@ -79,6 +79,7 @@ const description = ref('')
 const visits = ref([])
 const vets = ref([])
 const selectedVetId = ref(null)
+const activeVets = computed(() => (vets.value || []).filter(v => !v?.deleted))
 
 const ownerId = route.params.ownerId
 const petId = route.params.petId

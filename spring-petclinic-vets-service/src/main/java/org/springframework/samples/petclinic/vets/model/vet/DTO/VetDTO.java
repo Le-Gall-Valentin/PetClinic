@@ -8,6 +8,7 @@ public record VetDTO(
     Integer id,
     String firstName,
     String lastName,
-    List<SpecialtyDTO> specialties
+    List<SpecialtyDTO> specialties,
+    boolean deleted
 ) {
 }
