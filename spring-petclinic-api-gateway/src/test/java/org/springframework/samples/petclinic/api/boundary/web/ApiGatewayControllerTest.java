@@ -9,6 +9,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JAutoConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.samples.petclinic.api.application.CustomersServiceClient;
+import org.springframework.samples.petclinic.api.application.PetServiceClient;
+import org.springframework.samples.petclinic.api.application.VetServiceClient;
 import org.springframework.samples.petclinic.api.application.VisitsServiceClient;
 import org.springframework.samples.petclinic.api.dto.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -30,6 +32,12 @@ class ApiGatewayControllerTest {
 
     @MockBean
     private VisitsServiceClient visitsServiceClient;
+    
+    @MockBean
+    private VetServiceClient vetServiceClient;
+    
+    @MockBean
+    private PetServiceClient petServiceClient;
 
     @Autowired
     private WebTestClient client;
