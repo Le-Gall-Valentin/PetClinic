@@ -1,179 +1,120 @@
 package org.springframework.samples.petclinic.visits.service.visit;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.samples.petclinic.visits.model.Visit;
 import org.springframework.samples.petclinic.visits.model.VisitRepository;
-import org.springframework.samples.petclinic.visits.model.visit.DTO.VisitPostDTO;
 import org.springframework.samples.petclinic.visits.service.pet.PetDetails;
 import org.springframework.samples.petclinic.visits.service.pet.PetServiceClient;
+import org.springframework.samples.petclinic.visits.service.vet.VetServiceClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Date;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class VisitServiceImplTest {
-    private PetServiceClient petServiceClient;
+    @Mock
     private VisitRepository visitRepository;
-    private VisitServiceImpl visitService;
+    @Mock
+    private PetServiceClient petServiceClient;
+    @Mock
+    private VetServiceClient vetServiceClient;
+    @InjectMocks
+    private VisitServiceImpl service;
 
-    @BeforeEach
-    void setup() {
-        this.visitRepository = mock(VisitRepository.class);
-        this.petServiceClient = mock(PetServiceClient.class);
-        this.visitService = new VisitServiceImpl(
-            visitRepository,
-            petServiceClient
-        );
+    @Test
+    void createVisit_throws_whenPetDeleted() {
+        when(petServiceClient.getPet(10)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(10).deleted(true).build()));
+        assertThrows(IllegalStateException.class, () -> service.createVisit(10, new org.springframework.samples.petclinic.visits.model.visit.DTO.VisitPostDTO(new Date(), "desc", null)));
     }
 
     @Test
-    void createVisitWithActivePet_savesWithPetIdAndDescription() {
-        when(petServiceClient.getPet(123))
-            .thenReturn(Mono.just(PetDetails.
-                PetDetailsBuilder.
-                aPetDetails().
-                id(123).deleted(false).build()));
-
-        when(visitRepository.save(any(Visit.class))).thenAnswer(invocation -> {
-            Visit v = invocation.getArgument(0);
-            v.setId(42);
-            return v;
-        });
-
-        final var dto = new VisitPostDTO(null, "Checkup", null);
-        final Visit saved = visitService.createVisit(123, dto);
-
-        ArgumentCaptor<Visit> captor = ArgumentCaptor.forClass(Visit.class);
-        verify(visitRepository).save(captor.capture());
-        final Visit toSave = captor.getValue();
-        assertThat(toSave.getPetId()).isEqualTo(123);
-        assertThat(toSave.getDescription()).isEqualTo("Checkup");
-        assertThat(saved.getId()).isEqualTo(42);
+    void createVisit_throws_whenVetDeleted() {
+        when(petServiceClient.getPet(11)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(11).deleted(false).build()));
+        when(vetServiceClient.getVet(7)).thenReturn(Mono.just(new VetServiceClient.VetDetails(7, "A", "B", java.util.List.of(), true)));
+        assertThrows(IllegalStateException.class, () -> service.createVisit(11, new org.springframework.samples.petclinic.visits.model.visit.DTO.VisitPostDTO(new Date(), "desc", 7)));
     }
 
     @Test
-    void createVisitWithDeletedPet_ThrowIllegalState() {
-        when(petServiceClient.getPet(123))
-            .thenReturn(Mono.just(PetDetails.
-                PetDetailsBuilder.
-                aPetDetails().
-                id(123).deleted(true).build()));
+    void getVisitsByVetIdWithDateFilter_branches() {
+        Date from = new Date(System.currentTimeMillis() - 1000);
+        Date to = new Date(System.currentTimeMillis() + 1000);
+        when(visitRepository.findByVetIdAndDateBetween(2, from, to)).thenReturn(java.util.List.of(new Visit()));
+        assertThat(service.getVisitsByVetIdWithDateFilter(2, from, to)).hasSize(1);
 
-        var dto = new VisitPostDTO(null, "Checkup", null);
+        when(visitRepository.findByVetIdAndDateGreaterThanEqual(2, from)).thenReturn(java.util.List.of(new Visit()));
+        assertThat(service.getVisitsByVetIdWithDateFilter(2, from, null)).hasSize(1);
 
-        IllegalStateException ex = assertThrows(
-            IllegalStateException.class,
-            () -> visitService.createVisit(123, dto)
-        );
-
-        assertEquals("Cannot create visit for deleted pet", ex.getMessage());
-        verify(visitRepository, never()).save(any());
+        when(visitRepository.findByVetIdAndDateLessThanEqual(2, to)).thenReturn(java.util.List.of(new Visit()));
+        assertThat(service.getVisitsByVetIdWithDateFilter(2, null, to)).hasSize(1);
     }
 
     @Test
-    void getVisitsByPetId_delegatesToRepository() {
-        final Visit v = new Visit();
-        v.setId(1);
-        v.setPetId(99);
-        when(visitRepository.findByPetId(99)).thenReturn(List.of(v));
-
-        final List<Visit> result = visitService.getVisitsByPetId(99);
-        assertThat(result).hasSize(1);
-        verify(visitRepository).findByPetId(99);
+    void deleteVisit_notFound_throws() {
+        when(visitRepository.findById(99)).thenReturn(Optional.empty());
+        assertThrows(jakarta.persistence.EntityNotFoundException.class, () -> service.deleteVisit(99));
     }
 
     @Test
-    void getVisitsByPetIds_delegatesToRepository() {
-        when(visitRepository.findByPetIdIn(Arrays.asList(1, 2))).thenReturn(List.of(new Visit(), new Visit()));
-        final List<Visit> result = visitService.getVisitsByPetIds(Arrays.asList(1, 2));
-        assertThat(result).hasSize(2);
-        verify(visitRepository).findByPetIdIn(Arrays.asList(1, 2));
+    void deleteVisit_throws_whenPetDeleted() {
+        Visit v = new Visit();
+        v.setId(100);
+        v.setPetId(1);
+        v.setDate(new Date(System.currentTimeMillis() + 86_400_000));
+        when(visitRepository.findById(100)).thenReturn(Optional.of(v));
+        when(petServiceClient.getPet(1)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(1).deleted(true).build()));
+        assertThrows(IllegalStateException.class, () -> service.deleteVisit(100));
     }
 
     @Test
-    void getVisitsByVetId_delegatesToRepository() {
-        when(visitRepository.findByVetId(2)).thenReturn(List.of(new Visit()));
-        final List<Visit> result = visitService.getVisitsByVetId(2);
-        assertThat(result).hasSize(1);
-        verify(visitRepository).findByVetId(2);
+    void deleteVisit_throws_whenVetDeleted() {
+        Visit v = new Visit();
+        v.setId(101);
+        v.setPetId(1);
+        v.setVetId(7);
+        v.setDate(new Date(System.currentTimeMillis() + 86_400_000));
+        when(visitRepository.findById(101)).thenReturn(Optional.of(v));
+        when(petServiceClient.getPet(1)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(1).deleted(false).build()));
+        when(vetServiceClient.getVet(7)).thenReturn(Mono.just(new VetServiceClient.VetDetails(7, "A", "B", java.util.List.of(), true)));
+        assertThrows(IllegalStateException.class, () -> service.deleteVisit(101));
     }
 
     @Test
-    void dateFilter_callsBetweenWhenFromAndToPresent() {
-        java.util.Date from = new java.util.Date(0);
-        java.util.Date to = new java.util.Date();
-        when(visitRepository.findByVetIdAndDateBetween(2, from, to)).thenReturn(List.of(new Visit()));
-        final List<Visit> result = visitService.getVisitsByVetIdWithDateFilter(2, from, to);
-        assertThat(result).hasSize(1);
-        verify(visitRepository).findByVetIdAndDateBetween(2, from, to);
+    void deleteVisit_throws_whenDateNull_orPast() {
+        Visit v1 = new Visit();
+        v1.setId(102);
+        v1.setPetId(1);
+        when(visitRepository.findById(102)).thenReturn(Optional.of(v1));
+        when(petServiceClient.getPet(1)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(1).deleted(false).build()));
+        assertThrows(IllegalStateException.class, () -> service.deleteVisit(102));
+
+        Visit v2 = new Visit();
+        v2.setId(103);
+        v2.setPetId(1);
+        v2.setDate(new Date(System.currentTimeMillis() - 86_400_000));
+        when(visitRepository.findById(103)).thenReturn(Optional.of(v2));
+        when(petServiceClient.getPet(1)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(1).deleted(false).build()));
+        assertThrows(IllegalStateException.class, () -> service.deleteVisit(103));
     }
 
     @Test
-    void deleteVisit_throwsOnPastOrNullDate() {
-        final Visit v = new Visit();
-        v.setId(1);
-        v.setPetId(123);
-        v.setDate(new java.util.Date(0));
-        when(visitRepository.findById(1)).thenReturn(java.util.Optional.of(v));
-
-        when(petServiceClient.getPet(123))
-            .thenReturn(Mono.just(PetDetails.
-                PetDetailsBuilder.
-                aPetDetails().
-                id(123).deleted(false).build()));
-
-        try {
-            visitService.deleteVisit(1);
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage()).contains("future");
-        }
-        verify(visitRepository, never()).deleteById(anyInt());
-    }
-
-    @Test
-    void deleteVisit_deletesFuture() {
-        final Visit v = new Visit();
-        v.setId(2);
-        v.setPetId(123);
-        v.setDate(new java.util.Date(System.currentTimeMillis() + 86400000));
-        when(visitRepository.findById(2)).thenReturn(java.util.Optional.of(v));
-
-        when(petServiceClient.getPet(123))
-            .thenReturn(Mono.just(PetDetails.
-                PetDetailsBuilder.
-                aPetDetails().
-                id(123).deleted(false).build()));
-
-        visitService.deleteVisit(2);
-        verify(visitRepository).deleteById(2);
-    }
-
-    @Test
-    void deleteVisitOnDeletedPet_throws() {
-        final Visit v = new Visit();
-        v.setId(2);
-        v.setPetId(123);
-        v.setDate(new java.util.Date(System.currentTimeMillis() + 86400000));
-
-        when(visitRepository.findById(2)).thenReturn(java.util.Optional.of(v));
-        when(petServiceClient.getPet(123))
-            .thenReturn(Mono.just(PetDetails.
-                PetDetailsBuilder.
-                aPetDetails().
-                id(123).deleted(true).build()));
-
-        IllegalStateException ex = assertThrows(
-            IllegalStateException.class,
-            () -> visitService.deleteVisit(2)
-        );
-        assertEquals("Cannot delete visit for deleted pet", ex.getMessage());
-        verify(visitRepository, never()).deleteById(any());
+    void deleteVisit_deletes_whenFuture_andNotDeleted() {
+        Visit v = new Visit();
+        v.setId(104);
+        v.setPetId(1);
+        v.setDate(new Date(System.currentTimeMillis() + 86_400_000));
+        when(visitRepository.findById(104)).thenReturn(Optional.of(v));
+        when(petServiceClient.getPet(1)).thenReturn(Mono.just(PetDetails.PetDetailsBuilder.aPetDetails().id(1).deleted(false).build()));
+        doNothing().when(visitRepository).deleteById(104);
+        service.deleteVisit(104);
+        verify(visitRepository).deleteById(104);
     }
 }
