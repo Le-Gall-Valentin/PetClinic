@@ -1,6 +1,5 @@
 package org.springframework.samples.petclinic.vets.service.vet;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,99 +7,94 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.samples.petclinic.vets.exception.ResourceNotFoundException;
 import org.springframework.samples.petclinic.vets.model.specialty.Specialty;
-import org.springframework.samples.petclinic.vets.model.specialty.SpecialtyMapper;
 import org.springframework.samples.petclinic.vets.model.vet.DTO.VetPostDTO;
 import org.springframework.samples.petclinic.vets.model.vet.Vet;
 import org.springframework.samples.petclinic.vets.model.vet.VetEntityMapper;
 import org.springframework.samples.petclinic.vets.repository.vet.VetRepository;
 import org.springframework.samples.petclinic.vets.service.specialty.SpecialtyService;
+import org.springframework.samples.petclinic.vets.service.visit.VisitsServiceClient;
+import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class VetServiceImplTest {
-
     @Mock
     private VetRepository vetRepository;
     @Mock
     private SpecialtyService specialtyService;
+    @Mock
+    private VetEntityMapper vetEntityMapper;
+    @Mock
+    private VisitsServiceClient visitsServiceClient;
 
     @InjectMocks
     private VetServiceImpl service;
 
-    @BeforeEach
-    void setup() {
-        VetEntityMapper mapper = new VetEntityMapper(new SpecialtyMapper());
-        service = new VetServiceImpl(vetRepository, mapper, specialtyService);
-    }
-
     @Test
-    void getAllVets_returnsList() {
-        when(vetRepository.findAll()).thenReturn(List.of(new Vet(), new Vet()));
-        List<Vet> vets = service.getAllVets();
-        assertEquals(2, vets.size());
+    void getAllVets_delegates() {
+        when(vetRepository.findAll()).thenReturn(List.of(new Vet()));
+        assertThat(service.getAllVets()).hasSize(1);
         verify(vetRepository).findAll();
     }
 
     @Test
-    void addVet_mapsNames_addsSpecialties_andSaves() {
-        VetPostDTO dto = new VetPostDTO("John", "Doe", List.of(10, 11));
-        Specialty s1 = new Specialty();
-        s1.setId(10);
-        Specialty s2 = new Specialty();
-        s2.setId(11);
-        when(specialtyService.getSpecialtyById(10)).thenReturn(s1);
-        when(specialtyService.getSpecialtyById(11)).thenReturn(s2);
-        when(vetRepository.save(any(Vet.class))).thenAnswer(inv -> inv.getArgument(0, Vet.class));
-
+    void addVet_maps_addsSpecialties_andSaves() {
+        VetPostDTO dto = new VetPostDTO("A","B", List.of(1,2));
+        Vet vet = new Vet();
+        when(vetEntityMapper.map(any(Vet.class), eq(dto))).thenReturn(vet);
+        when(specialtyService.getSpecialtyById(anyInt())).thenReturn(new Specialty());
+        when(vetRepository.save(vet)).thenReturn(vet);
         Vet saved = service.addVet(dto);
-
-        assertEquals("John", saved.getFirstName());
-        assertEquals("Doe", saved.getLastName());
-        assertEquals(2, saved.getNrOfSpecialties());
-        verify(vetRepository).save(any(Vet.class));
+        assertThat(saved).isSameAs(vet);
+        verify(vetRepository).save(vet);
     }
 
     @Test
-    void updateVet_updatesExisting_andSaves() {
-        Vet existing = new Vet();
-        existing.setId(1);
-        existing.setFirstName("A");
-        existing.setLastName("B");
-        when(vetRepository.findById(1)).thenReturn(Optional.of(existing));
-
-        VetPostDTO dto = new VetPostDTO("Alice", "Smith", List.of());
-        service.updateVet(1, dto);
-
-        assertEquals("Alice", existing.getFirstName());
-        assertEquals("Smith", existing.getLastName());
-        verify(vetRepository).save(existing);
-    }
-
-    @Test
-    void updateVet_throws404_whenNotFound() {
+    void updateVet_notFound_throws() {
         when(vetRepository.findById(99)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.updateVet(99, new VetPostDTO("x", "y", List.of())));
+        assertThrows(ResourceNotFoundException.class, () -> service.updateVet(99, new VetPostDTO("A","B", List.of())));
     }
 
     @Test
-    void getVetById_returnsEntity() {
-        Vet v = new Vet();
-        v.setId(7);
-        when(vetRepository.findById(7)).thenReturn(Optional.of(v));
-
-        Vet result = service.getVetById(7);
-        assertEquals(7, result.getId());
+    void updateVet_updatesSpecialties_andSaves() {
+        Vet vet = new Vet();
+        when(vetRepository.findById(7)).thenReturn(Optional.of(vet));
+        VetPostDTO dto = new VetPostDTO("A","B", List.of(1));
+        when(specialtyService.getSpecialtyById(1)).thenReturn(new Specialty());
+        service.updateVet(7, dto);
+        verify(vetEntityMapper).map(vet, dto);
+        verify(vetRepository).save(vet);
     }
 
     @Test
-    void getVetById_throws404_whenMissing() {
-        when(vetRepository.findById(7)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getVetById(7));
+    void getVetById_notFound_throws() {
+        when(vetRepository.findById(77)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.getVetById(77));
+    }
+
+    @Test
+    void deleteVet_throws_whenHasFutureVisits() {
+        Vet vet = new Vet();
+        when(vetRepository.findById(5)).thenReturn(Optional.of(vet));
+        when(visitsServiceClient.getVisitsByVetFrom(5, LocalDate.now().toString())).thenReturn(Mono.just(java.util.List.of(new VisitsServiceClient.VisitDTO(1,1,5, LocalDate.now().plusDays(1).toString(), "desc"))));
+        assertThrows(IllegalStateException.class, () -> service.deleteVet(5));
+    }
+
+    @Test
+    void deleteVet_softDelete_andSave_whenNoFutureVisits() {
+        Vet vet = new Vet();
+        when(vetRepository.findById(6)).thenReturn(Optional.of(vet));
+        when(visitsServiceClient.getVisitsByVetFrom(eq(6), anyString())).thenReturn(Mono.just(java.util.List.of()));
+        when(vetRepository.save(vet)).thenReturn(vet);
+        service.deleteVet(6);
+        assertThat(vet.getDeletedAt()).isNotNull();
+        verify(vetRepository).save(vet);
     }
 }

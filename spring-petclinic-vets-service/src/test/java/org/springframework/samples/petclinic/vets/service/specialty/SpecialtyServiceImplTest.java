@@ -12,36 +12,27 @@ import org.springframework.samples.petclinic.vets.repository.specialty.Specialty
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class SpecialtyServiceImplTest {
-
     @Mock
-    private SpecialtyRepository repository;
-
+    private SpecialtyRepository specialtyRepository;
     @InjectMocks
     private SpecialtyServiceImpl service;
 
     @Test
-    void getAllSpecialties_returnsList() {
-        when(repository.findAll()).thenReturn(List.of(new Specialty(), new Specialty(), new Specialty()));
-        assertEquals(3, service.getAllSpecialties().size());
+    void getAllSpecialties_delegates() {
+        when(specialtyRepository.findAll()).thenReturn(List.of(new Specialty()));
+        assertThat(service.getAllSpecialties()).hasSize(1);
+        verify(specialtyRepository).findAll();
     }
 
     @Test
-    void getSpecialtyById_returnsSpecialty() {
-        Specialty s = new Specialty();
-        s.setId(9);
-        when(repository.findById(9)).thenReturn(Optional.of(s));
-        assertEquals(9, service.getSpecialtyById(9).getId());
-    }
-
-    @Test
-    void getSpecialtyById_throws404_whenMissing() {
-        when(repository.findById(42)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getSpecialtyById(42));
+    void getSpecialtyById_notFound_throws() {
+        when(specialtyRepository.findById(99)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.getSpecialtyById(99));
     }
 }

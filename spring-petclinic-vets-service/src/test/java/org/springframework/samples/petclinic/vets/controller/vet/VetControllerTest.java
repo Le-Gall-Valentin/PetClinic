@@ -50,8 +50,8 @@ class VetControllerTest {
         v2.setFirstName("C");
         v2.setLastName("D");
         when(vetService.getAllVets()).thenReturn(List.of(v1, v2));
-        when(vetEntityMapper.map(v1)).thenReturn(new VetDTO(1, "A", "B", List.of()));
-        when(vetEntityMapper.map(v2)).thenReturn(new VetDTO(2, "C", "D", List.of()));
+        when(vetEntityMapper.map(v1)).thenReturn(new VetDTO(1, "A", "B", List.of(), false));
+        when(vetEntityMapper.map(v2)).thenReturn(new VetDTO(2, "C", "D", List.of(), false));
 
         mockMvc.perform(get("/vets"))
             .andExpect(status().isOk())
@@ -67,7 +67,7 @@ class VetControllerTest {
         created.setFirstName("John");
         created.setLastName("Doe");
         when(vetService.addVet(any(VetPostDTO.class))).thenReturn(created);
-        when(vetEntityMapper.map(created)).thenReturn(new VetDTO(10, "John", "Doe", List.of()));
+        when(vetEntityMapper.map(created)).thenReturn(new VetDTO(10, "John", "Doe", List.of(), false));
 
         String body = """
             {"firstName":"John","lastName":"Doe","specialties":[1,2]}
@@ -115,7 +115,7 @@ class VetControllerTest {
         v.setFirstName("E");
         v.setLastName("F");
         when(vetService.getVetById(3)).thenReturn(v);
-        when(vetEntityMapper.map(v)).thenReturn(new VetDTO(3, "E", "F", List.of()));
+        when(vetEntityMapper.map(v)).thenReturn(new VetDTO(3, "E", "F", List.of(), false));
         mockMvc.perform(get("/vets/3"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id", is(3)));
