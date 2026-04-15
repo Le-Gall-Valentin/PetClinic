@@ -50,6 +50,30 @@ pipeline {
                 '''
             }
         }
+
+        stage('Upload JARs To Nexus') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-jenkins', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh '''
+                        set -eux
+
+                        BUILD_TAG_SAFE="$(echo "${BUILD_TAG}" | tr ' /:' '---')"
+
+                        find . -path '*/target/*.jar' ! -name '*.jar.original' | while read -r jar; do
+                          base="$(basename "$jar")"
+                          module="$(basename "$(dirname "$(dirname "$jar")")")"
+
+                          curl -f -u "$NEXUS_USER:$NEXUS_PASS" \
+                            --upload-file "$jar" \
+                            "http://127.0.0.1:8081/repository/jenkins-jars/${JOB_NAME}/${BUILD_TAG_SAFE}/${module}/${base}"
+                        done
+                    '''
+                }
+            }
+        }
     }
 
     post {
