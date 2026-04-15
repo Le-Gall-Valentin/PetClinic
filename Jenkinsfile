@@ -24,6 +24,19 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('Local SonarQube') {
+                    sh '''
+                        set -eux
+                        ./mvnw -B -ntp sonar:sonar \
+                          -Dsonar.projectKey=petclinic \
+                          -Dsonar.projectName=PetClinic
+                    '''
+                }
+            }
+        }
+
         stage('Validate Outputs') {
             steps {
                 sh '''
