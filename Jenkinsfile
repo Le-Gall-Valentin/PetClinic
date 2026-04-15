@@ -9,7 +9,9 @@ pipeline {
     environment {
         JAVA_HOME = '/usr/lib/jvm/java-21-openjdk-amd64'
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
-        JAVA_TOOL_OPTIONS = "-Djava.io.tmpdir=${env.WORKSPACE}/.tmp -DLOG_PATH=${env.WORKSPACE}/logs"
+        JENKINS_TMP = '/var/snap/jenkins/common/petclinic-tmp'
+        JENKINS_LOGS = '/var/snap/jenkins/common/petclinic-logs'
+        JAVA_TOOL_OPTIONS = "-Djava.io.tmpdir=/var/snap/jenkins/common/petclinic-tmp -DLOG_PATH=/var/snap/jenkins/common/petclinic-logs"
     }
 
     stages {
@@ -17,7 +19,7 @@ pipeline {
             steps {
                 sh '''
                     set -eux
-                    mkdir -p "$WORKSPACE/.tmp" "$WORKSPACE/logs"
+                    mkdir -p "$JENKINS_TMP" "$JENKINS_LOGS"
                     chmod +x mvnw
                     ./mvnw -B -ntp -PbuildVue clean verify
                 '''
@@ -44,6 +46,7 @@ pipeline {
                     test -f spring-petclinic-api-gateway/target/classes/static/index.html
                     find . -path '*/target/*.jar' ! -name '*.jar.original' | sort
                     find . -path '*/target/site/jacoco/index.html' | sort
+                    find . -path '*/target/surefire-reports/*.xml' | sort || true
                 '''
             }
         }
